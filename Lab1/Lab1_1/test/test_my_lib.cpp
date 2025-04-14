@@ -6,7 +6,7 @@ class TestFoo : public ::testing::Test {
 
 TEST_F(TestFoo, test_add)
 {
-    Array<int> a(10);
+    Array<int, 10> a = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     ASSERT_EQ(a.size(), 10);
 }
 

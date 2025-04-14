@@ -1,6 +1,6 @@
 #include <iostream>
 #include <exception>
-#pragma once
+//#pragma once
 #include <cstddef>  // для std::size_t
 #include <vector>
 #include <stdexcept>

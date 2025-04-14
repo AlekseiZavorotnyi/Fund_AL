@@ -156,6 +156,7 @@ public:
     Array(const std::initializer_list<T>& list) {
         if(list.size() > N) throw std::out_of_range("Initializer list is too large");
         std::copy_n(list.begin(), list.size(), arr);
+        this->len = list.size();
     }
 
     Array<T, N>& operator=(const Container<T>& other) override {
@@ -319,7 +320,7 @@ public:
         return true;
     }
 
-    bool operator<=>(Array<T, N>& other)
+    /*bool operator<=>(Array<T, N>& other)
     {
         if (this->len != other.len) {
             return this->len <= other.len;
@@ -330,18 +331,10 @@ public:
             }
         }
         return true;
-    }
+    }*/
 
     bool empty() override
     {
         return this->size == 0;
     }
 };
-
-
-int main()
-{
-    Array<int, 10> a = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    Array<int, 5> arr1({1, 2, 3});
-    return 0;
-}

@@ -1,13 +1,23 @@
-cmake_minimum_required(VERSION 3.10)
-
+cmake_minimum_required(VERSION 3.28.3)
 enable_testing()
 
 # Флаги компиляции
-set(COMMON_FLAGS "-Wall -Wextra -Wpedantic -Werror -fsanitize=address -fsanitize=leak")
+set(COMMON_FLAGS
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Werror
+        -fsanitize=address
+        -fsanitize=leak
+)
 
 # Флаги для покрытия кода (активны только в Debug)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(COVERAGE_FLAGS "--coverage -fprofile-arcs -ftest-coverage")
+    set(COVERAGE_FLAGS
+            --coverage
+            -fprofile-arcs
+            -ftest-coverage
+    )
 endif()
 
 # Добавляем GoogleTest
@@ -65,3 +75,6 @@ if(CPPCHECK)
 else()
     message(WARNING "cppcheck не найден, цель 'cppcheck' недоступна.")
 endif()
+
+add_executable(main src/main.cpp)
+target_link_libraries(main PRIVATE my_lib)
