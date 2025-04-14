@@ -3,6 +3,7 @@
 
 int main() {
     Array<int, 10> arr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    std::cout << arr.size() << std::endl;
     for (const auto &x : arr) {
         std::cout << x << std::endl;
     }

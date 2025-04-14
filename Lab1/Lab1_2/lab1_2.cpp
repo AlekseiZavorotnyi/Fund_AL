@@ -27,5 +27,8 @@ public:
 
 int main()
 {
-    my_ex::print();
+    std::vector<int> numbers;
+    auto iter = numbers.begin();
+    std::cout << *iter << std::endl;
+    return 0;
 }
