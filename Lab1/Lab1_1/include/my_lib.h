@@ -146,12 +146,45 @@ protected:
     T *arr = nullptr;
 
 public:
-    Array() : cap(N), arr(new T[this->cap]) {}
-
-    Array(const std::initializer_list<T>& list) {
-        if(list.size() > N) throw std::out_of_range("Initializer list is too large");
-        std::copy_n(list.begin(), list.size(), arr);
-        this->cap = list.size();
+    // Array() : cap(N), arr(new T[this->cap]) {}
+    //
+    // Array(const std::initializer_list<T>& list) {
+    //     if(list.size() > N) throw std::out_of_range("Initializer list is too large");
+    //     arr = new T[this->cap];
+    //     std::copy_n(list.begin(), list.size(), arr);
+    //     this->cap = list.size();
+    // }
+    Array() : cap(N), arr(new T[cap]) {}
+    explicit Array(const std::size_t len, const T& val) :
+    cap(N), arr(new T[len]) {
+        for (std::size_t i = 0; i < len && i < cap; i++) {
+            arr[i] = val;
+        }
+    }
+    Array(const Array &other) :
+    cap(other.cap), arr(new T[cap]) {
+        std::copy(other.arr, other.arr + cap, arr);
+    };
+    Array(Array &&other)  noexcept :
+    cap(other.cap), arr(other.arr) {
+        other.arr = nullptr;
+        other.cap = 0;
+    }
+    Array(std::initializer_list<T> init) :
+    cap(N), arr(new T[cap]) {
+        std::size_t i = 0;
+        for (const auto el : init) {
+            if (i >= cap) break;
+            arr[i++] = el;
+        }
+    }
+    Array(std::initializer_list<const std::pair<size_t, T>> init) :
+    cap(N), arr(new T[cap]) {
+        for (const auto& [ind, val] : init) {
+            if (ind < cap) {
+                arr[ind] = val;
+            }
+        }
     }
 
     Array& operator=(const Array& other) {
@@ -172,7 +205,6 @@ public:
 
     std::size_t size() final
     {
-        std::cout << "WW" << std::endl;
         return this->cap;
     }
 
@@ -235,6 +267,12 @@ public:
         for (std::size_t i = 0; i < this->cap; ++i) arr[i] = value;
     }
 
+    void swap(Array &other) noexcept {
+        std::swap(arr, other.arr);
+        std::swap(cap, other.cap);
+    }
+
+
     bool operator==(const Array& other) const
     {
         if (this->cap != other.cap) {
@@ -250,69 +288,47 @@ public:
 
     bool operator!=(const Array& other) const
     {
-        if (this->cap != other.cap) {
-            return true;
-        }
-        for (int i = 0; i < this->cap; i++) {
-            if (this[i] != other[i]) {
-                return true;
-            }
-        }
-        return false;
+        return !(*this == other);
     }
 
     bool operator<(Array& other)
     {
-        if (this->cap != other.cap) {
-            return this->cap < other.cap;
-        }
-        for (int i = 0; i < this->cap; i++) {
-            if (this[i] != other[i]) {
-                return this[i] < other[i];
-            }
-        }
-        return false;
-    }
+        const std::size_t less_len = (this->cap > other.cap) ? other.cap : this->cap;
 
-    bool operator>(Array& other)
-    {
-        if (this->cap != other.cap) {
-            return this->cap > other.cap;
-        }
-        for (int i = 0; i < this->cap; i++) {
-            if (this[i] != other[i]) {
-                return this[i] > other[i];
+        for (std::size_t i = 0; i < less_len; ++i) {
+            if (this->arr[i] < other.arr[i]) {
+                return true;
+            }
+            if (this->arr[i] > other.arr[i]) {
+                return false;
             }
         }
-        return false;
+        return this->cap < other.cap;
     }
 
     bool operator<=(Array& other)
     {
-        if (this->cap != other.cap) {
-            return this->cap <= other.cap;
-        }
-        for (int i = 0; i < this->cap; i++) {
-            if (this[i] != other[i]) {
-                return this[i] <= other[i];
-            }
-        }
-        return true;
+        return (*this < other || *this == other);
     }
 
     bool operator>=(Array& other)
     {
-        if (this->cap != other.cap) {
-            return this->cap >= other.cap;
-        }
-        for (int i = 0; i < this->cap; i++) {
-            if (this[i] != other[i]) {
-                return this[i] >= other[i];
-            }
-        }
-        return true;
+        return !(*this < other);
     }
 
+    bool operator>(const Array &other) const {
+        return !(*this <= other);
+    }
+
+    constexpr auto operator<=>(const Array &other) const {
+        if (*this == other) {
+            return std::weak_ordering::equivalent;
+        }
+        if (*this < other) {
+            return std::weak_ordering::less;
+        }
+        return std::weak_ordering::greater;
+    }
     /*bool operator<=>(Array<T, N>& other)
     {
         if (this->cap != other.cap) {
