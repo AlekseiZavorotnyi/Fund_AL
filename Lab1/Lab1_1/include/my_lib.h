@@ -5,345 +5,327 @@
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
+namespace my_cont {
+    template<typename T>
+    class Container {
+    public:
+        Container() = default;
+        Container(const Container<T>& other) = default;
 
-/*namespace my_ex {
-    class Ex final : std::exception {
+        //virtual Container<T>& operator=(const Container<T>& other) = 0;
 
+        virtual ~Container() = default;
+
+        [[nodiscard]] virtual bool empty() const = 0;
+        [[nodiscard]] virtual std::size_t size() const = 0;
+        [[nodiscard]] virtual std::size_t max_size() const = 0;
+        //virtual bool operator==(const Container<T>& other) const = 0;
+        //virtual bool operator!=(const Container<T>& other) const = 0;
     };
-    void print() {
-        std::cout << "WW" << std::endl;
-    }
-}
-*/
 
-
-template<typename T>
-class Container {
-public:
-    Container() = default;
-    Container(const Container<T>& other) = default;
-
-    //virtual Container<T>& operator=(const Container<T>& other) = 0;
-
-    virtual ~Container() = default;
-
-    virtual bool empty() = 0;
-    virtual std::size_t size() = 0;
-    virtual std::size_t max_size() = 0;
-    //virtual bool operator==(const Container<T>& other) const = 0;
-    //virtual bool operator!=(const Container<T>& other) const = 0;
-};
-
-
-template <class T, std::size_t N>
-class Array : public Container<T>
-{
-protected:
-    template <class IterType>
-    class ArrayIterator
+    template <class T, std::size_t N>
+    class Array final : public Container<T>
     {
-    protected:
+        template<class Type, std::size_t>
         friend class Array;
-        using NoConstIterType = std::remove_const_t<IterType>;
-        NoConstIterType *ptr = nullptr;
-        ArrayIterator(NoConstIterType *ptr) : ptr(ptr) {}
-        ArrayIterator(const ArrayIterator &other) = default;
+    protected:
+        template <class IterType>
+        class ArrayIterator
+        {
+        protected:
+            friend class Array;
+            using NoConstIterType = std::remove_const_t<IterType>;
+            NoConstIterType *ptr = nullptr;
+            explicit ArrayIterator(NoConstIterType *ptr) : ptr(ptr) {}
+            ArrayIterator(const ArrayIterator &other) = default;
+
+        public:
+            ArrayIterator(ArrayIterator &&other) = default;
+            ArrayIterator operator++()
+            {
+                this->ptr++;
+                return *this;
+            }
+
+            ArrayIterator operator++(int)
+            {
+                ArrayIterator tmp = *this;
+                ++this->ptr;
+                return tmp;
+            }
+
+            ArrayIterator operator--()
+            {
+                this->ptr--;
+                return *this;
+            }
+
+            ArrayIterator operator--(int)
+            {
+                ArrayIterator tmp = *this;
+                --this->ptr;
+                return tmp;
+            }
+
+            bool operator==(const ArrayIterator &other) const
+            {
+                return this->ptr == other.ptr;
+            }
+            bool operator!=(const ArrayIterator &other) const
+            {
+                return !(*this == other);
+            };
+            IterType operator*()
+            {
+                return *this->ptr;
+            }
+        };
+
+        template <class IterType>
+        class ArrayReverseIterator
+        {
+        protected:
+            friend class Array;
+            using NoConstIterType = std::remove_const_t<IterType>;
+            NoConstIterType *ptr = nullptr;
+            explicit ArrayReverseIterator(NoConstIterType *ptr) : ptr(ptr) {}
+            ArrayReverseIterator(const ArrayReverseIterator &other) = default;
+
+        public:
+            ArrayReverseIterator(ArrayReverseIterator &&other) = default;
+            ArrayReverseIterator operator++()
+            {
+                this->ptr--;
+                return *this;
+            }
+            ArrayReverseIterator operator++(int)
+            {
+                ArrayReverseIterator tmp = *this;
+                --this->ptr;
+                return tmp;
+            }
+
+            ArrayReverseIterator operator--()
+            {
+                this->ptr++;
+                return *this;
+            }
+
+            ArrayReverseIterator operator--(int)
+            {
+                ArrayReverseIterator tmp = *this;
+                ++this->ptr;
+                return tmp;
+            }
+
+            bool operator==(const ArrayReverseIterator &other) const
+            {
+                return this->ptr == other.ptr;
+            }
+            bool operator!=(const ArrayReverseIterator &other) const
+            {
+                return !(*this == other);
+            };
+            IterType operator*()
+            {
+                return *this->ptr;
+            }
+        };
+
+        std::size_t cap = 0;
+        using NoConstT = std::remove_const_t<T>;
+        NoConstT *arr = nullptr;
 
     public:
-        ArrayIterator(ArrayIterator &&other) = default;
-        ArrayIterator operator++()
-        {
-            this->ptr++;
-            return *this;
-        }
+        using Iterator = ArrayIterator<NoConstT>;
+        using ReverseIterator = ArrayReverseIterator<NoConstT>;
+        using ConstIterator = ArrayIterator<const NoConstT>;
+        using ConstReverseIterator = ArrayReverseIterator<const NoConstT>;
 
-        ArrayIterator operator++(int)
-        {
-            ArrayIterator tmp = *this;
-            ++this->ptr;
-            return tmp;
-        }
-
-        ArrayIterator operator--()
-        {
-            this->ptr--;
-            return *this;
-        }
-
-        ArrayIterator operator--(int)
-        {
-            ArrayIterator tmp = *this;
-            --this->ptr;
-            return tmp;
-        }
-
-        bool operator==(const ArrayIterator &other) const
-        {
-            return this->ptr == other.ptr;
-        }
-        bool operator!=(const ArrayIterator &other) const
-        {
-            return !(*this == other);
-        };
-        IterType operator*()
-        {
-            return *this->ptr;
-        }
-    };
-
-    template <class IterType>
-    class ArrayReverseIterator
-    {
-    protected:
-        friend class Array;
-        using NoConstIterType = std::remove_const_t<IterType>;
-        NoConstIterType *ptr = nullptr;
-        ArrayReverseIterator(NoConstIterType *ptr) : ptr(ptr) {}
-        ArrayReverseIterator(const ArrayReverseIterator &other) = default;
-
-    public:
-        ArrayReverseIterator(ArrayReverseIterator &&other) = default;
-        ArrayReverseIterator operator++()
-        {
-            this->ptr--;
-            return *this;
-        }
-        ArrayReverseIterator operator++(int)
-        {
-            ArrayReverseIterator tmp = *this;
-            --this->ptr;
-            return tmp;
-        }
-
-        ArrayReverseIterator operator--()
-        {
-            this->ptr++;
-            return *this;
-        }
-
-        ArrayReverseIterator operator--(int)
-        {
-            ArrayReverseIterator tmp = *this;
-            ++this->ptr;
-            return tmp;
-        }
-
-        bool operator==(const ArrayReverseIterator &other) const
-        {
-            return this->ptr == other.ptr;
-        }
-        bool operator!=(const ArrayReverseIterator &other) const
-        {
-            return !(*this == other);
-        };
-        IterType operator*()
-        {
-            return *this->ptr;
-        }
-    };
-
-    std::size_t cap = 0;
-    T *arr = nullptr;
-
-public:
-    // Array() : cap(N), arr(new T[this->cap]) {}
-    //
-    // Array(const std::initializer_list<T>& list) {
-    //     if(list.size() > N) throw std::out_of_range("Initializer list is too large");
-    //     arr = new T[this->cap];
-    //     std::copy_n(list.begin(), list.size(), arr);
-    //     this->cap = list.size();
-    // }
-    Array() : cap(N), arr(new T[cap]) {}
-    explicit Array(const std::size_t len, const T& val) :
-    cap(N), arr(new T[len]) {
-        for (std::size_t i = 0; i < len && i < cap; i++) {
-            arr[i] = val;
-        }
-    }
-    Array(const Array &other) :
-    cap(other.cap), arr(new T[cap]) {
-        std::copy(other.arr, other.arr + cap, arr);
-    };
-    Array(Array &&other)  noexcept :
-    cap(other.cap), arr(other.arr) {
-        other.arr = nullptr;
-        other.cap = 0;
-    }
-    Array(std::initializer_list<T> init) :
-    cap(N), arr(new T[cap]) {
-        std::size_t i = 0;
-        for (const auto el : init) {
-            if (i >= cap) break;
-            arr[i++] = el;
-        }
-    }
-    Array(std::initializer_list<const std::pair<size_t, T>> init) :
-    cap(N), arr(new T[cap]) {
-        for (const auto& [ind, val] : init) {
-            if (ind < cap) {
-                arr[ind] = val;
+        Array() {
+            this->arr = new NoConstT[N];
+            this->cap = N;
+            for (std::size_t i = 0; i < N; ++i) {
+                this->arr[i] = 0;
             }
         }
-    }
 
-    Array& operator=(const Array& other) {
-        if (&other != this) {
-            delete[] arr;
-            this->cap = other.cap;
-            this->arr = new T[this->cap];
-            for (size_t i = 0; i < cap; ++i)
-                arr[i] = other.arr[i];
+        Array(std::initializer_list<NoConstT> init) {
+            if (init.size() != N) {
+                throw std::invalid_argument("Incorrect initializer list size.");
+            }
+            this->arr = new NoConstT[N];
+            std::copy(init.begin(), init.end(), this->arr);
+            this->cap = N;
         }
-        return *this;
-    }
 
-    ~Array() final
-    {
-        delete[] this->arr;
-    }
+        Array(const Array &other) {
+            cap = other.cap;
+            arr = new NoConstT[cap];
+            std::copy(other.arr, other.arr + cap, this->arr);
+        }
 
-    std::size_t size() final
-    {
-        return this->cap;
-    }
+        Array(Array &&other) noexcept {
+            this->cap = other.cap;
+            this->arr = other.arr;
+            other.arr = nullptr;
+            other.cap = 0;
+        }
 
-    std::size_t max_size() final
-    {
-        return this->cap;
-    }
+        Array& operator=(const Array& other) noexcept {
+            if (&other != this) {
+                delete[] arr;
+                this->cap = other.cap;
+                this->arr = new NoConstT[this->cap];
+                for (size_t i = 0; i < cap; ++i)
+                    arr[i] = other.arr[i];
+            }
+            return *this;
+        }
 
-    T at(std::size_t ind)
-    {
-        if (ind < this->cap)
+        ~Array() override
+        {
+            delete[] this->arr;
+        }
+
+        [[nodiscard]] std::size_t size() const noexcept override
+        {
+            return this->cap;
+        }
+
+        [[nodiscard]] std::size_t max_size() const noexcept override
+        {
+            return this->cap;
+        }
+
+        T& at(std::size_t ind)
+        {
+            if (ind < this->cap)
+            {
+                return this->arr[ind];
+            }
+            throw std::out_of_range("ind");
+        }
+
+        T& operator[](std::size_t ind)
         {
             return this->arr[ind];
         }
-        throw std::out_of_range("ind");
-    }
 
-    T operator[](std::size_t ind)
-    {
-        return this->arr[ind];
-    }
-
-    ArrayIterator<T> begin()
-    {
-        return ArrayIterator<T>(this->arr);
-    }
-    ArrayIterator<T> end()
-    {
-        return ArrayIterator<T>(this->arr + this->cap);
-    }
-
-    ArrayIterator<const T> cbegin() const
-    {
-        return ArrayIterator<const T>(this->arr);
-    }
-    ArrayIterator<const T> cend() const
-    {
-        return ArrayIterator<const T>(this->arr + this->cap);
-    }
-
-    ArrayReverseIterator<T> rbegin()
-    {
-        return ArrayReverseIterator<T>(this->arr + this->cap - 1);
-    }
-    ArrayReverseIterator<T> rend()
-    {
-        return ArrayReverseIterator<T>(this->arr - 1);
-    }
-
-    ArrayReverseIterator<const T> crbegin()
-    {
-        return ArrayReverseIterator<const T>(this->arr + this->cap - 1);
-    }
-    ArrayReverseIterator<const T> crend()
-    {
-        return ArrayReverseIterator<const T>(this->arr - 1);
-    }
-
-    void fill(const T& value) {
-        for (std::size_t i = 0; i < this->cap; ++i) arr[i] = value;
-    }
-
-    void swap(Array &other) noexcept {
-        std::swap(arr, other.arr);
-        std::swap(cap, other.cap);
-    }
-
-
-    bool operator==(const Array& other) const
-    {
-        if (this->cap != other.cap) {
-            return false;
+        Iterator begin()
+        {
+            return Iterator(this->arr);
         }
-        for (int i = 0; i < this->cap; i++) {
-            if (this[i] != other[i]) {
+        Iterator end()
+        {
+            return Iterator(this->arr + this->cap);
+        }
+
+        ConstIterator cbegin() const
+        {
+            return ConstIterator(this->arr);
+        }
+        ConstIterator cend() const
+        {
+            return ConstIterator(this->arr + this->cap);
+        }
+
+        ReverseIterator rbegin()
+        {
+            return ReverseIterator(this->arr + this->cap - 1);
+        }
+        ReverseIterator rend()
+        {
+            return ReverseIterator(this->arr - 1);
+        }
+
+        ConstReverseIterator crbegin()
+        {
+            return ConstReverseIterator(this->arr + this->cap - 1);
+        }
+        ConstReverseIterator crend()
+        {
+            return ConstReverseIterator(this->arr - 1);
+        }
+
+        void fill(const T& value) {
+            for (std::size_t i = 0; i < this->cap; ++i) arr[i] = value;
+        }
+
+        void swap(Array &other) noexcept {
+            for (std::size_t i = 0; i < this->cap; i++) {
+                NoConstT tmp = this->arr[i];
+                this->arr[i] = other.arr[i];
+                other.arr[i] = tmp;
+            }
+        }
+
+        bool operator==(const Array& other) const
+        {
+            if (this->cap != other.cap) {
                 return false;
             }
-        }
-        return true;
-    }
-
-    bool operator!=(const Array& other) const
-    {
-        return !(*this == other);
-    }
-
-    bool operator<(Array& other)
-    {
-        const std::size_t less_len = (this->cap > other.cap) ? other.cap : this->cap;
-
-        for (std::size_t i = 0; i < less_len; ++i) {
-            if (this->arr[i] < other.arr[i]) {
-                return true;
+            for (std::size_t i = 0; i < this->cap; i++) {
+                if (this->arr[i] != other.arr[i]) {
+                    return false;
+                }
             }
-            if (this->arr[i] > other.arr[i]) {
-                return false;
+            return true;
+        }
+
+        bool operator!=(const Array& other) const
+        {
+            return !(*this == other);
+        }
+
+        bool operator<(Array& other)
+        {
+            const std::size_t less_len = (this->cap > other.cap) ? other.cap : this->cap;
+
+            for (std::size_t i = 0; i < less_len; ++i) {
+                if (this->arr[i] < other.arr[i]) {
+                    return true;
+                }
+                if (this->arr[i] > other.arr[i]) {
+                    return false;
+                }
             }
+            return this->cap < other.cap;
         }
-        return this->cap < other.cap;
-    }
 
-    bool operator<=(Array& other)
-    {
-        return (*this < other || *this == other);
-    }
-
-    bool operator>=(Array& other)
-    {
-        return !(*this < other);
-    }
-
-    bool operator>(const Array &other) const {
-        return !(*this <= other);
-    }
-
-    constexpr auto operator<=>(const Array &other) const {
-        if (*this == other) {
-            return std::weak_ordering::equivalent;
+        bool operator<=(Array& other)
+        {
+            return (*this < other || *this == other);
         }
-        if (*this < other) {
-            return std::weak_ordering::less;
+
+        bool operator>=(Array& other)
+        {
+            return !(*this < other);
         }
-        return std::weak_ordering::greater;
-    }
-    /*bool operator<=>(Array<T, N>& other)
-    {
-        if (this->cap != other.cap) {
-            return this->cap <= other.cap;
+
+        bool operator>(const Array &other) const {
+            return !(*this <= other);
         }
-        for (int i = 0; i < this->cap; i++) {
-            if (this[i] != other[i]) {
-                return this[i] <= other[i];
+
+        template<std::size_t N2>
+            std::strong_ordering operator<=>(const Array<T, N2> &other) const {
+            std::size_t n = std::min(N, N2);
+            for (std::size_t i = 0; i < n; i++) {
+                if (auto cmp = this->arr[i] <=> other.arr[i]; cmp != 0) {
+                    return cmp;
+                }
             }
-        }
-        return true;
-    }*/
 
-    bool empty() final
-    {
-        return this->cap == 0;
-    }
-};
+            if (auto cmp = this->cap <=> other.cap; cmp != 0) {
+                return cmp;
+            }
+
+            return std::strong_ordering::equal;
+        }
+
+        [[nodiscard]] bool empty() const noexcept override
+        {
+            return this->cap == 0;
+        }
+    };
+}
