@@ -11,7 +11,6 @@ protected:
             testArray[i] = i + 1;
         }
     }
-    void TearDown() override{}
 };
 
 TEST_F(TestFoo, DefaultConstructor) {
@@ -163,10 +162,5 @@ TEST_F(TestFoo, Swap) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-    int result = RUN_ALL_TESTS();
-    // std::cout<< "RESULT : " << result << std::endl;
-    // if (result != 0) {
-    //     std::cerr << "Some tests failed." << std::endl;
-    // }
-    return result;
+    return RUN_ALL_TESTS();
 }

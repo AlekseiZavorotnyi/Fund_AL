@@ -183,12 +183,16 @@ namespace my_cont {
         }
 
         Array &operator=(Array &&other) noexcept {
-            this->cap = other.cap;
-            this->arr = other.arr;
-            other.arr = nullptr;
-            other.cap = 0;
+            if (this != &other) {
+                delete[] this->arr;
+                this->cap = other.cap;
+                this->arr = other.arr;
+                other.arr = nullptr;
+                other.cap = 0;
+            }
             return *this;
         }
+
 
         ~Array() override
         {
