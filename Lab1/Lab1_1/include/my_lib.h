@@ -1,7 +1,6 @@
 #pragma once
 #include <iostream>
-#include <exception>
-#include <cstddef>  // для std::size_t
+#include <cstddef>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
@@ -183,6 +182,14 @@ namespace my_cont {
             return *this;
         }
 
+        Array &operator=(Array &&other) noexcept {
+            this->cap = other.cap;
+            this->arr = other.arr;
+            other.arr = nullptr;
+            other.cap = 0;
+            return *this;
+        }
+
         ~Array() override
         {
             delete[] this->arr;
@@ -210,6 +217,18 @@ namespace my_cont {
         T& operator[](std::size_t ind)
         {
             return this->arr[ind];
+        }
+
+        T &front() {
+            return this->arr[0];
+        }
+
+        T &back() {
+            return this->arr[this->cap - 1];
+        }
+
+        T *Data() {
+            return this->arr;
         }
 
         Iterator begin()
