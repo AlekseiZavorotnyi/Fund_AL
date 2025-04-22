@@ -2,9 +2,6 @@
 #include "my_lib.h"
 
 class TestFoo : public ::testing::Test {
-};
-
-class ArrayTest : public ::testing::Test {
 protected:
     void SetUp() override {
         for(int i = 0; i < 5; ++i) {
@@ -16,12 +13,12 @@ protected:
     my_cont::Array<int, 5> testArray;
 };
 
-TEST_F(ArrayTest, DefaultConstructor) {
+TEST_F(TestFoo, DefaultConstructor) {
     EXPECT_EQ(emptyArray.size(), 5);
     EXPECT_FALSE(emptyArray.empty());
 }
 
-TEST_F(ArrayTest, InitializerListConstructor) {
+TEST_F(TestFoo, InitializerListConstructor) {
     my_cont::Array<int, 5> arr{1, 2, 3, 4, 5};
     EXPECT_EQ(arr.size(), 5);
     for(int i = 0; i < 5; ++i) {
@@ -29,7 +26,7 @@ TEST_F(ArrayTest, InitializerListConstructor) {
     }
 }
 
-TEST_F(ArrayTest, CopyConstructor) {
+TEST_F(TestFoo, CopyConstructor) {
     my_cont::Array<int, 5> copy(testArray);
     EXPECT_EQ(copy.size(), testArray.size());
     for(int i = 0; i < 5; ++i) {
@@ -37,13 +34,13 @@ TEST_F(ArrayTest, CopyConstructor) {
     }
 }
 
-TEST_F(ArrayTest, MoveConstructor) {
+TEST_F(TestFoo, MoveConstructor) {
     my_cont::Array<int, 5> temp(testArray);
     my_cont::Array<int, 5> moved(std::move(temp));
 
     EXPECT_EQ(moved.size(), 5);
     EXPECT_EQ(temp.size(), 0);
-    EXPECT_EQ(temp.Data(), nullptr);
+    EXPECT_EQ(temp.data(), nullptr);
 
     for(int i = 0; i < 5; ++i) {
         EXPECT_EQ(moved[i], i + 1);
@@ -51,7 +48,7 @@ TEST_F(ArrayTest, MoveConstructor) {
 }
 
 
-TEST_F(ArrayTest, AssignmentOp) {
+TEST_F(TestFoo, AssignmentOp) {
     my_cont::Array<int, 5> copy;
     copy = testArray;
 
@@ -60,17 +57,17 @@ TEST_F(ArrayTest, AssignmentOp) {
     }
 }
 
-TEST_F(ArrayTest, MoveAssignmentOp) {
+TEST_F(TestFoo, MoveAssignmentOp) {
     my_cont::Array<int, 5> temp(testArray);
     my_cont::Array<int, 5> moved;
     moved = std::move(temp);
 
     EXPECT_EQ(moved.size(), 5);
     EXPECT_EQ(temp.size(), 0);
-    EXPECT_EQ(temp.Data(), nullptr);
+    EXPECT_EQ(temp.data(), nullptr);
 }
 
-TEST_F(ArrayTest, ComparisonOps) {
+TEST_F(TestFoo, ComparisonOps) {
     const my_cont::Array<int, 5> same{1, 2, 3, 4, 5};
     const my_cont::Array<int, 5> less{0, 2, 3, 4, 5};
     const my_cont::Array<int, 5> greater{2, 2, 3, 4, 5};
@@ -83,18 +80,18 @@ TEST_F(ArrayTest, ComparisonOps) {
     EXPECT_TRUE(testArray >= less);
 }
 
-TEST_F(ArrayTest, At) {
+TEST_F(TestFoo, At) {
     EXPECT_EQ(testArray.at(2), 3);
     EXPECT_THROW(testArray.at(5), std::out_of_range);
 }
 
-TEST_F(ArrayTest, SubscriptOp) {
+TEST_F(TestFoo, SubscriptOp) {
     EXPECT_EQ(testArray[2], 3);
     testArray[2] = 10;
     EXPECT_EQ(testArray[2], 10);
 }
 
-TEST_F(ArrayTest, Front_Back) {
+TEST_F(TestFoo, Front_Back) {
     EXPECT_EQ(testArray.front(), 1);
     EXPECT_EQ(testArray.back(), 5);
 
@@ -104,28 +101,28 @@ TEST_F(ArrayTest, Front_Back) {
     EXPECT_EQ(testArray.back(), 20);
 }
 
-TEST_F(ArrayTest, Data) {
-    int* ptr = testArray.Data();
+TEST_F(TestFoo, data) {
+    int* ptr = testArray.data();
     EXPECT_EQ(ptr[0], 1);
     ptr[0] = 10;
     EXPECT_EQ(testArray.front(), 10);
 }
 
-TEST_F(ArrayTest, ForwardIteration) {
+TEST_F(TestFoo, ForwardIteration) {
     int expected = 1;
     for(auto it = testArray.begin(); it != testArray.end(); ++it) {
         EXPECT_EQ(*it, expected++);
     }
 }
 
-TEST_F(ArrayTest, ReverseIteration) {
+TEST_F(TestFoo, ReverseIteration) {
     int expected = 5;
     for(auto rit = testArray.rbegin(); rit != testArray.rend(); ++rit) {
         EXPECT_EQ(*rit, expected--);
     }
 }
 
-TEST_F(ArrayTest, ConstIterators) {
+TEST_F(TestFoo, ConstIterators) {
     const my_cont::Array<int, 5>& constRef = testArray;
     int expected = 1;
     for(auto it = constRef.cbegin(); it != constRef.cend(); ++it) {
@@ -133,20 +130,20 @@ TEST_F(ArrayTest, ConstIterators) {
     }
 }
 
-TEST_F(ArrayTest, Sizes) {
+TEST_F(TestFoo, Sizes) {
     EXPECT_EQ(testArray.size(), 5);
     EXPECT_EQ(testArray.max_size(), 5);
     EXPECT_FALSE(testArray.empty());
 }
 
-TEST_F(ArrayTest, Fill) {
+TEST_F(TestFoo, Fill) {
     testArray.fill(42);
     for(auto&& item : testArray) {
         EXPECT_EQ(item, 42);
     }
 }
 
-TEST_F(ArrayTest, Swap) {
+TEST_F(TestFoo, Swap) {
     my_cont::Array<int, 5> other;
     other.fill(10);
 

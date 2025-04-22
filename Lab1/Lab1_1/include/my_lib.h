@@ -1,9 +1,10 @@
+#ifndef MY_LIB_H
+#define MY_LIB_H
 #pragma once
-#include <iostream>
 #include <cstddef>
-#include <vector>
 #include <stdexcept>
 #include <algorithm>
+
 namespace my_cont {
     template<typename T>
     class Container {
@@ -227,7 +228,7 @@ namespace my_cont {
             return this->arr[this->cap - 1];
         }
 
-        T *Data() {
+        T *data() {
             return this->arr;
         }
 
@@ -348,3 +349,4 @@ namespace my_cont {
         }
     };
 }
+#endif
