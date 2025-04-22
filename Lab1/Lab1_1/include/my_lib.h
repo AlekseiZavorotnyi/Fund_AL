@@ -1,6 +1,5 @@
 #ifndef MY_LIB_H
 #define MY_LIB_H
-#pragma once
 #include <cstddef>
 #include <stdexcept>
 #include <algorithm>

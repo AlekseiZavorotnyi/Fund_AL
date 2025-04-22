@@ -3,14 +3,15 @@
 
 class TestFoo : public ::testing::Test {
 protected:
+    my_cont::Array<int, 5> emptyArray;
+    my_cont::Array<int, 5> testArray;
+
     void SetUp() override {
         for(int i = 0; i < 5; ++i) {
             testArray[i] = i + 1;
         }
     }
-
-    my_cont::Array<int, 5> emptyArray;
-    my_cont::Array<int, 5> testArray;
+    void TearDown() override{}
 };
 
 TEST_F(TestFoo, DefaultConstructor) {
@@ -162,5 +163,10 @@ TEST_F(TestFoo, Swap) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    int result = RUN_ALL_TESTS();
+    // std::cout<< "RESULT : " << result << std::endl;
+    // if (result != 0) {
+    //     std::cerr << "Some tests failed." << std::endl;
+    // }
+    return result;
 }
