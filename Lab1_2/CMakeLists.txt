@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Fund_AL LANGUAGES CXX)
+#project(Fund_AL LANGUAGES CXX)
 
 include(CTest)
 enable_testing()
@@ -26,24 +26,24 @@ FetchContent_MakeAvailable(googletest)
 
 # Добавляем библиотеку
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS src/*.cpp)
-add_library(my_list ${SRC_FILES})
-target_include_directories(my_list PUBLIC include)
+add_library(list_lib ${SRC_FILES})
+target_include_directories(list_lib PUBLIC include)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_link_libraries(my_list PRIVATE asan)
+    target_link_libraries(list_lib PRIVATE asan)
 endif()
 
 # Создаём отдельный исполняемый файл для тестов
-file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS test/test_my_list.cpp)
-add_executable(tests ${TEST_FILES})
-target_link_libraries(tests PRIVATE my_list GTest::gtest_main)
+file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS tests/*.cpp)
+add_executable(tests_list ${TEST_FILES})
+target_link_libraries(tests_list PRIVATE list_lib GTest::gtest_main)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_link_libraries(tests PRIVATE asan)
+    target_link_libraries(tests_list PRIVATE asan)
 endif()
 
 # Регистрируем тесты
-add_test(NAME MyTests COMMAND tests)
+add_test(NAME ListTests COMMAND tests_list)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # Добавляем цель для покрытия кода
@@ -51,7 +51,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     find_program(GENHTML genhtml)
 
     if(LCOV AND GENHTML)
-        add_custom_target(coverage
+        add_custom_target(list_coverage
                 COMMAND ${LCOV} --capture --directory . --ignore-errors mismatch --output-file coverage.info
                 COMMAND ${LCOV} --remove coverage.info /usr/* */googletest/* */tests/* --output-file coverage_filtered.info
                 COMMAND ${GENHTML} coverage_filtered.info --output-directory coverage_report
@@ -68,7 +68,7 @@ endif()
 find_program(CPPCHECK cppcheck)
 
 if(CPPCHECK)
-    add_custom_target(cppcheck
+    add_custom_target(list_cppcheck
             COMMAND ${CPPCHECK} --enable=all --inconclusive --quiet --suppress=missingIncludeSystem -I include src test
             COMMENT "Запуск cppcheck..."
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -78,7 +78,7 @@ else()
     message(WARNING "cppcheck не найден, цель 'cppcheck' недоступна.")
 endif()
 
-add_custom_target(clean-build
+add_custom_target(list-clean-build
         COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}/bin
         COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}/*.a
         COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}/test*
@@ -87,11 +87,10 @@ add_custom_target(clean-build
         COMMENT "Очистка собранных исполняемых файлов"
 )
 
-add_custom_target(purge
+add_custom_target(list-purge
         COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}
         COMMENT "Полная очистка всех артефактов сборки"
 )
 
-add_executable(main src/main.cpp
-        include/my_list.h)
-target_link_libraries(main PRIVATE my_list)
+add_executable(list_main src/main.cpp)
+target_link_libraries(list_main PRIVATE list_lib)
