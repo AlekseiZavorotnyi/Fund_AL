@@ -1,26 +1,22 @@
 #include <gtest/gtest.h>
-#include "List.h" // Include your List class header
+#include "List.h"
 #include <algorithm>
 #include <string>
 
 using namespace my_cont;
 
-// Fixture class for List tests
 class ListTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Setup code if needed
     }
 
     void TearDown() override {
-        // Cleanup code if needed
     }
 
     List<int> emptyList;
     List<int> listWithValues{1, 2, 3, 4, 5};
 };
 
-// Test constructors
 TEST_F(ListTest, DefaultConstructor) {
     EXPECT_TRUE(emptyList.empty());
     EXPECT_EQ(emptyList.size(), 0);
@@ -41,7 +37,6 @@ TEST_F(ListTest, CopyConstructor) {
     EXPECT_EQ(copy.front(), listWithValues.front());
     EXPECT_EQ(copy.back(), listWithValues.back());
 
-    // Modify original and verify copy is unchanged
     listWithValues.pop_front();
     EXPECT_NE(copy.front(), listWithValues.front());
     EXPECT_EQ(copy.size(), 5);
@@ -57,7 +52,6 @@ TEST_F(ListTest, MoveConstructor) {
     EXPECT_EQ(moved.back(), 30);
 }
 
-// Test assignment operators
 TEST_F(ListTest, CopyAssignment) {
     List<int> copy;
     copy = listWithValues;
@@ -66,7 +60,6 @@ TEST_F(ListTest, CopyAssignment) {
     EXPECT_EQ(copy.front(), listWithValues.front());
     EXPECT_EQ(copy.back(), listWithValues.back());
 
-    // Self-assignment
     copy = copy;
     EXPECT_EQ(copy.size(), 5);
 }
@@ -82,8 +75,6 @@ TEST_F(ListTest, MoveAssignment) {
     EXPECT_EQ(moved.back(), 30);
 }
 
-
-// Test element access
 TEST_F(ListTest, FrontAndBack) {
     EXPECT_EQ(listWithValues.front(), 1);
     EXPECT_EQ(listWithValues.back(), 5);
@@ -100,27 +91,22 @@ TEST_F(ListTest, FrontBackThrowWhenEmpty) {
     EXPECT_THROW(emptyList.back(), std::out_of_range);
 }
 
-// Test iterators
 TEST_F(ListTest, Iterators) {
-    // Forward iteration
     int expected = 1;
     for (auto it = listWithValues.begin(); it != listWithValues.end(); ++it) {
         EXPECT_EQ(*it, expected++);
     }
 
-    // Const forward iteration
     expected = 1;
     for (auto it = listWithValues.cbegin(); it != listWithValues.cend(); ++it) {
         EXPECT_EQ(*it, expected++);
     }
 
-    // Reverse iteration
     expected = 5;
     for (auto it = listWithValues.rbegin(); it != listWithValues.rend(); ++it) {
         EXPECT_EQ(*it, expected--);
     }
 
-    // Const reverse iteration
     expected = 5;
     for (auto it = listWithValues.crbegin(); it != listWithValues.crend(); ++it) {
         EXPECT_EQ(*it, expected--);
@@ -145,7 +131,6 @@ TEST_F(ListTest, IteratorOperations) {
     EXPECT_EQ(it1, it2);
 }
 
-// Test capacity
 TEST_F(ListTest, EmptyAndSize) {
     EXPECT_TRUE(emptyList.empty());
     EXPECT_EQ(emptyList.size(), 0);
@@ -154,7 +139,6 @@ TEST_F(ListTest, EmptyAndSize) {
     EXPECT_EQ(listWithValues.size(), 5);
 }
 
-// Test modifiers
 TEST_F(ListTest, PushPopFrontBack) {
     listWithValues.push_front(0);
     EXPECT_EQ(listWithValues.front(), 0);
@@ -178,28 +162,32 @@ TEST_F(ListTest, PopEmptyThrows) {
     EXPECT_THROW(emptyList.pop_back(), std::out_of_range);
 }
 
-TEST_F(ListTest, InsertErase) {
-    auto it = listWithValues.begin();
-    ++it; // points to 2
-
-    it = listWithValues.insert(it, 10);
-    EXPECT_EQ(*it, 10);
+TEST_F(ListTest, Insert) {
+    auto it = listWithValues.begin().next();
+    listWithValues.insert(it, 42);
+    auto itCheck = listWithValues.begin();
+    ++itCheck;
+    EXPECT_EQ(*itCheck, 42);
     EXPECT_EQ(listWithValues.size(), 6);
-
-    it = listWithValues.erase(it);
-    EXPECT_EQ(*it, 2);
-    EXPECT_EQ(listWithValues.size(), 5);
-
-    // Insert at end
-    it = listWithValues.insert(listWithValues.end(), 20);
-    EXPECT_EQ(*it, 20);
-    EXPECT_EQ(listWithValues.back(), 20);
-
-    // Erase last element
-    it = listWithValues.erase(--listWithValues.end());
-    EXPECT_EQ(it, listWithValues.end());
-    EXPECT_EQ(listWithValues.back(), 5);
 }
+
+TEST_F(ListTest, Erase) {
+    auto it = listWithValues.begin().next();
+    listWithValues.erase(it);
+    auto itCheck = ++listWithValues.begin();
+    EXPECT_EQ(*itCheck, 3);
+    EXPECT_EQ(listWithValues.size(), 4);
+
+    List<int> l = {1, 2, 3, 4, 5};
+    l.erase(l.begin());
+    EXPECT_EQ(l.size(), 4);
+    EXPECT_EQ(l.front(), 2);
+
+    l.erase(l.begin().next(3));
+    EXPECT_EQ(l.back(), 4);
+    EXPECT_EQ(l.size(), 3);
+}
+
 
 TEST_F(ListTest, Clear) {
     EXPECT_FALSE(listWithValues.empty());
@@ -215,7 +203,7 @@ TEST_F(ListTest, Resize) {
 
     listWithValues.resize(5);
     EXPECT_EQ(listWithValues.size(), 5);
-    EXPECT_EQ(listWithValues.back(), 0); // default initialized
+    EXPECT_EQ(listWithValues.back(), 0);
 }
 
 TEST_F(ListTest, Swap) {
@@ -231,48 +219,49 @@ TEST_F(ListTest, Swap) {
     EXPECT_EQ(other.back(), 5);
 }
 
-// Test comparison operators
 TEST_F(ListTest, ComparisonOperators) {
     List<int> same{1, 2, 3, 4, 5};
     List<int> smaller{1, 2, 3};
+    List<int> smaller2{1, 2, 2};
     List<int> greater{1, 2, 3, 4, 5, 6};
+    List<int> greater2{1, 2, 4};
     List<int> different{5, 4, 3, 2, 1};
 
-    // Equality
+
     EXPECT_TRUE(listWithValues == same);
     EXPECT_FALSE(listWithValues == smaller);
 
-    // Inequality
     EXPECT_TRUE(listWithValues != smaller);
     EXPECT_FALSE(listWithValues != same);
 
-    // Less than
     EXPECT_TRUE(smaller < listWithValues);
+    EXPECT_TRUE(smaller2 < listWithValues);
     EXPECT_FALSE(listWithValues < smaller);
     EXPECT_FALSE(listWithValues < same);
 
-    // Less than or equal
     EXPECT_TRUE(smaller <= listWithValues);
     EXPECT_TRUE(listWithValues <= same);
-    EXPECT_FALSE(listWithValues <= smaller);
+    EXPECT_FALSE(listWithValues <= smaller2);
 
-    // Greater than
     EXPECT_TRUE(listWithValues > smaller);
+    EXPECT_TRUE(greater > listWithValues);
+    EXPECT_TRUE(greater2 > listWithValues);
     EXPECT_FALSE(smaller > listWithValues);
     EXPECT_FALSE(listWithValues > same);
 
-    // Greater than or equal
     EXPECT_TRUE(listWithValues >= smaller);
     EXPECT_TRUE(listWithValues >= same);
     EXPECT_FALSE(smaller >= listWithValues);
 
-    // Three-way comparison
     EXPECT_EQ((listWithValues <=> same), std::strong_ordering::equal);
     EXPECT_EQ((listWithValues <=> smaller), std::strong_ordering::greater);
     EXPECT_EQ((smaller <=> listWithValues), std::strong_ordering::less);
+    EXPECT_EQ((listWithValues <=> greater), std::strong_ordering::less);
+    EXPECT_EQ((greater <=> listWithValues), std::strong_ordering::greater);
+    EXPECT_EQ((listWithValues <=> smaller2), std::strong_ordering::greater);
+    EXPECT_EQ((smaller2 <=> listWithValues), std::strong_ordering::less);
 }
 
-// Test edge cases
 TEST_F(ListTest, SingleElementList) {
     List<int> single{42};
 

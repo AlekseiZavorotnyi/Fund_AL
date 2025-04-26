@@ -17,7 +17,7 @@ namespace my_cont {
 
         [[nodiscard]] virtual bool empty() const = 0;
         [[nodiscard]] virtual std::size_t size() const = 0;
-        //[[nodiscard]] virtual std::size_t max_size() const = 0;
+        [[nodiscard]] virtual std::size_t max_size() const = 0;
     };
 
     template <typename T>
@@ -29,7 +29,7 @@ namespace my_cont {
             Node* prev;
             Node* next;
 
-            Node(const T& val, Node* p = nullptr, Node* n = nullptr)
+            explicit Node(const T& val, Node* p = nullptr, Node* n = nullptr)
                 : data(val), prev(p), next(n) {}
 
             friend class List;
@@ -43,13 +43,17 @@ namespace my_cont {
         template <typename IterType>
         class ListIterator {
         private:
-            Node* current;
             friend class List;
+            Node* current;
+
         public:
 
-            ListIterator(Node* node = nullptr) : current(node) {}
+            explicit ListIterator(Node* node = nullptr) : current(node) {}
 
-            IterType& operator*() const { return current->data; }
+            IterType& operator*() const {
+                if (!current) throw std::out_of_range("Dereferencing null iterator");
+                return current->data;
+            }
             IterType* operator->() const { return &current->data; }
 
             ListIterator operator++() {
@@ -82,19 +86,31 @@ namespace my_cont {
                 return !(*this == other);
             }
 
+            ListIterator &next(std::size_t offset = 1) {
+                for (std::size_t i = 0; i < offset; i++) {
+                    if (current == nullptr) {
+                        throw std::out_of_range("ListIterator::next. Offset is out of the collection.");
+                    }
+                    current = current->next;
+                }
+                return *this;
+            }
 
         };
 
         template <typename IterType>
         class ListReverseIterator {
         private:
-            Node* current;
             friend class List;
+            Node* current;
         public:
 
-            ListReverseIterator(Node* node = nullptr) : current(node) {}
+            explicit ListReverseIterator(Node* node = nullptr) : current(node) {}
 
-            IterType operator*() const { return current->data; }
+            IterType& operator*() const {
+                if (!current) throw std::out_of_range("Dereferencing null iterator");
+                return current->data;
+            }
             IterType* operator->() const { return &current->data; }
 
             ListReverseIterator operator++() {
@@ -181,12 +197,10 @@ namespace my_cont {
             return *this;
         }
 
-        iterator begin() { return iterator(head); }
-        const_iterator begin() const { return const_iterator(head); }
+        iterator begin() const { return iterator(head); }
         const_iterator cbegin() const { return const_iterator(head); }
 
-        iterator end() { return iterator(nullptr); }
-        const_iterator end() const { return const_iterator(nullptr); }
+        iterator end() const { return iterator(nullptr); }
         const_iterator cend() const { return const_iterator(nullptr); }
 
         reverse_iterator rbegin() { return reverse_iterator(tail); }
@@ -197,9 +211,10 @@ namespace my_cont {
 
         [[nodiscard]] bool empty() const override { return cap == 0; }
         [[nodiscard]] std::size_t size() const override { return cap; }
+        [[nodiscard]] std::size_t max_size() const override { return cap; }
 
         T& front() {
-            if (empty()) throw std::out_of_range("List is empty");
+            if (empty() || !head) throw std::out_of_range("List is empty");
             return head->data;
         }
 
@@ -222,10 +237,12 @@ namespace my_cont {
             if (pos == end()) {
                 push_back(value);
                 return iterator(tail);
-            } else if (pos == begin()) {
+            }
+            else if (pos == begin()) {
                 push_front(value);
                 return begin();
-            } else {
+            }
+            else {
                 Node* newNode = new Node(value, pos.current->prev, pos.current);
                 pos.current->prev->next = newNode;
                 pos.current->prev = newNode;
@@ -244,13 +261,15 @@ namespace my_cont {
 
             if (toDelete->prev) {
                 toDelete->prev->next = toDelete->next;
-            } else {
+            }
+            else {
                 head = toDelete->next;
             }
 
             if (toDelete->next) {
                 toDelete->next->prev = toDelete->prev;
-            } else {
+            }
+            else {
                 tail = toDelete->prev;
             }
 
@@ -258,6 +277,7 @@ namespace my_cont {
             --cap;
             return nextIter;
         }
+
 
         void push_back(const T& value) {
             Node* newNode = new Node(value, tail, nullptr);
@@ -342,17 +362,18 @@ namespace my_cont {
         }
 
         std::strong_ordering operator<=>(const List& other) const {
-            auto it1 = this->begin();
+            auto it1 = begin();
             auto it2 = other.begin();
 
-            while (it1 != this->end() && it2 != other.end()) {
+            while (it1 != end() && it2 != other.end()) {
                 if (auto cmp = *it1 <=> *it2; cmp != 0) {
                     return cmp;
                 }
                 ++it1;
                 ++it2;
             }
-            return std::strong_ordering::equal;
+
+            return size() <=> other.size();
         }
 
     };
