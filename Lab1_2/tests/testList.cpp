@@ -1,166 +1,371 @@
 #include <gtest/gtest.h>
-#include "list.h"
+#include "my_lib.h" // Include your List class header
+#include <algorithm>
+#include <string>
 
-class TestFoo : public ::testing::Test {
+using namespace my_cont;
+
+// Fixture class for List tests
+class ListTest : public ::testing::Test {
 protected:
-    my_cont::List<int> emptyList;
-    my_cont::List<int> testList;
-
     void SetUp() override {
-        for(int i = 0; i < 5; ++i) {
-            testList.push_front(i + 1);
-        }
+        // Setup code if needed
     }
+
+    void TearDown() override {
+        // Cleanup code if needed
+    }
+
+    List<int> emptyList;
+    List<int> listWithValues{1, 2, 3, 4, 5};
+    List<std::string> stringList{"one", "two", "three"};
 };
 
-TEST_F(TestFoo, DefaultConstructor) {
-    EXPECT_EQ(testList.size(), 5);
-    EXPECT_FALSE(testList.empty());
+// Test constructors
+TEST_F(ListTest, DefaultConstructor) {
+    EXPECT_TRUE(emptyList.empty());
+    EXPECT_EQ(emptyList.size(), 0);
 }
 
-/*TEST_F(TestFoo, InitializerListConstructor) {
-    my_cont::List<int> lst{1, 2, 3, 4, 5};
-    EXPECT_EQ(lst.size(), 5);
-    for(int i = 0; i < 5; ++i) {
-        EXPECT_EQ(lst->, i + 1);
-    }
+TEST_F(ListTest, InitializerListConstructor) {
+    EXPECT_FALSE(listWithValues.empty());
+    EXPECT_EQ(listWithValues.size(), 5);
+
+    EXPECT_EQ(listWithValues.front(), 1);
+    EXPECT_EQ(listWithValues.back(), 5);
+
+    EXPECT_FALSE(stringList.empty());
+    EXPECT_EQ(stringList.size(), 3);
+    EXPECT_EQ(stringList.front(), "one");
+    EXPECT_EQ(stringList.back(), "three");
 }
 
-TEST_F(TestFoo, CopyConstructor) {
-    my_cont::List<int> copy(testList);
-    EXPECT_EQ(copy.size(), testList.size());
-    for(int i = 0; i < 5; ++i) {
-        EXPECT_EQ(copy[i], testList[i]);
-    }
+TEST_F(ListTest, CopyConstructor) {
+    List<int> copy(listWithValues);
+
+    EXPECT_EQ(copy.size(), listWithValues.size());
+    EXPECT_EQ(copy.front(), listWithValues.front());
+    EXPECT_EQ(copy.back(), listWithValues.back());
+
+    // Modify original and verify copy is unchanged
+    listWithValues.pop_front();
+    EXPECT_NE(copy.front(), listWithValues.front());
+    EXPECT_EQ(copy.size(), 5);
 }
 
-TEST_F(TestFoo, MoveConstructor) {
-    my_cont::List<int> temp(testList);
-    my_cont::List<int> moved(std::move(temp));
+TEST_F(ListTest, MoveConstructor) {
+    List<int> original{10, 20, 30};
+    List<int> moved(std::move(original));
 
-    EXPECT_EQ(moved.size(), 5);
-    EXPECT_EQ(temp.size(), 0);
-    EXPECT_EQ(temp.data(), nullptr);
-
-    for(int i = 0; i < 5; ++i) {
-        EXPECT_EQ(moved[i], i + 1);
-    }
+    EXPECT_TRUE(original.empty());
+    EXPECT_EQ(moved.size(), 3);
+    EXPECT_EQ(moved.front(), 10);
+    EXPECT_EQ(moved.back(), 30);
 }
 
+// Test assignment operators
+TEST_F(ListTest, CopyAssignment) {
+    List<int> copy;
+    copy = listWithValues;
 
-TEST_F(TestFoo, AssignmentOp) {
-    my_cont::List<int> copy;
-    copy = testList;
+    EXPECT_EQ(copy.size(), listWithValues.size());
+    EXPECT_EQ(copy.front(), listWithValues.front());
+    EXPECT_EQ(copy.back(), listWithValues.back());
 
-    for(int i = 0; i < 5; ++i) {
-        EXPECT_EQ(copy[i], testList[i]);
-    }
+    // Self-assignment
+    copy = copy;
+    EXPECT_EQ(copy.size(), 5);
 }
 
-TEST_F(TestFoo, MoveAssignmentOp) {
-    my_cont::List<int> temp(testList);
-    my_cont::List<int> moved;
-    moved = std::move(temp);
+TEST_F(ListTest, MoveAssignment) {
+    List<int> original{100, 200, 300};
+    List<int> moved;
+    moved = std::move(original);
 
-    EXPECT_EQ(moved.size(), 5);
-    EXPECT_EQ(temp.size(), 0);
-    EXPECT_EQ(temp.data(), nullptr);
+    EXPECT_TRUE(original.empty());
+    EXPECT_EQ(moved.size(), 3);
+    EXPECT_EQ(moved.front(), 100);
+    EXPECT_EQ(moved.back(), 300);
+
+    // Self-assignment
+    moved = std::move(moved);
+    EXPECT_EQ(moved.size(), 3);
 }
 
-TEST_F(TestFoo, ComparisonOps) {
-    const my_cont::List<int> same{1, 2, 3, 4, 5};
-    const my_cont::List<int> less{0, 2, 3, 4, 5};
-    const my_cont::List<int> greater{2, 2, 3, 4, 5};
+// Test element access
+TEST_F(ListTest, FrontAndBack) {
+    EXPECT_EQ(listWithValues.front(), 1);
+    EXPECT_EQ(listWithValues.back(), 5);
 
-    EXPECT_TRUE(testList == same);
-    EXPECT_TRUE(testList != less);
-    EXPECT_TRUE(less < testList);
-    EXPECT_TRUE(greater > testList);
-    EXPECT_TRUE(less <= testList);
-    EXPECT_TRUE(testList >= less);
+    listWithValues.push_front(0);
+    EXPECT_EQ(listWithValues.front(), 0);
+
+    listWithValues.push_back(6);
+    EXPECT_EQ(listWithValues.back(), 6);
 }
 
-TEST_F(TestFoo, At) {
-    EXPECT_EQ(testList.at(2), 3);
-    EXPECT_THROW(testList.at(5), std::out_of_range);
+TEST_F(ListTest, FrontBackThrowWhenEmpty) {
+    EXPECT_THROW(emptyList.front(), std::out_of_range);
+    EXPECT_THROW(emptyList.back(), std::out_of_range);
 }
 
-TEST_F(TestFoo, SubscriptOp) {
-    EXPECT_EQ(testList[2], 3);
-    testList[2] = 10;
-    EXPECT_EQ(testList[2], 10);
-}
-
-TEST_F(TestFoo, Front_Back) {
-    EXPECT_EQ(testList.front(), 1);
-    EXPECT_EQ(testList.back(), 5);
-
-    testList.front() = 10;
-    testList.back() = 20;
-    EXPECT_EQ(testList.front(), 10);
-    EXPECT_EQ(testList.back(), 20);
-}
-
-TEST_F(TestFoo, data) {
-    int* ptr = testList.data();
-    EXPECT_EQ(ptr[0], 1);
-    ptr[0] = 10;
-    EXPECT_EQ(testList.front(), 10);
-}
-
-TEST_F(TestFoo, ForwardIteration) {
+// Test iterators
+TEST_F(ListTest, Iterators) {
+    // Forward iteration
     int expected = 1;
-    for(auto it = testList.begin(); it != testList.end(); ++it) {
+    for (auto it = listWithValues.begin(); it != listWithValues.end(); ++it) {
         EXPECT_EQ(*it, expected++);
     }
-}
 
-TEST_F(TestFoo, ReverseIteration) {
-    int expected = 5;
-    for(auto rit = testList.rbegin(); rit != testList.rend(); ++rit) {
-        EXPECT_EQ(*rit, expected--);
-    }
-}
-
-TEST_F(TestFoo, ConstIterators) {
-    const my_cont::List<int>& constRef = testList;
-    int expected = 1;
-    for(auto it = constRef.cbegin(); it != constRef.cend(); ++it) {
+    // Const forward iteration
+    expected = 1;
+    for (auto it = listWithValues.cbegin(); it != listWithValues.cend(); ++it) {
         EXPECT_EQ(*it, expected++);
     }
-}
 
-TEST_F(TestFoo, Sizes) {
-    EXPECT_EQ(testList.size(), 5);
-    EXPECT_EQ(testList.max_size(), 5);
-    EXPECT_FALSE(testList.empty());
-}
+    // Reverse iteration
+    expected = 5;
+    for (auto it = listWithValues.rbegin(); it != listWithValues.rend(); ++it) {
+        EXPECT_EQ(*it, expected--);
+    }
 
-TEST_F(TestFoo, Fill) {
-    testList.fill(42);
-    for(auto&& item : testList) {
-        EXPECT_EQ(item, 42);
+    // Const reverse iteration
+    expected = 5;
+    for (auto it = listWithValues.crbegin(); it != listWithValues.crend(); ++it) {
+        EXPECT_EQ(*it, expected--);
     }
 }
 
-TEST_F(TestFoo, Swap) {
-    my_cont::List<int> other;
-    other.fill(10);
+TEST_F(ListTest, IteratorOperations) {
+    auto it1 = listWithValues.begin();
+    auto it2 = it1;
+    ++it2;
 
-    testList.swap(other);
+    EXPECT_EQ(*it1, 1);
+    EXPECT_EQ(*it2, 2);
 
-    for(auto&& item : testList) {
-        EXPECT_EQ(item, 10);
+    --it2;
+    EXPECT_EQ(it1, it2);
+
+    it1++;
+    EXPECT_NE(it1, it2);
+
+    it1--;
+    EXPECT_EQ(it1, it2);
+}
+
+// Test capacity
+TEST_F(ListTest, EmptyAndSize) {
+    EXPECT_TRUE(emptyList.empty());
+    EXPECT_EQ(emptyList.size(), 0);
+
+    EXPECT_FALSE(listWithValues.empty());
+    EXPECT_EQ(listWithValues.size(), 5);
+}
+
+// Test modifiers
+TEST_F(ListTest, PushPopFrontBack) {
+    listWithValues.push_front(0);
+    EXPECT_EQ(listWithValues.front(), 0);
+    EXPECT_EQ(listWithValues.size(), 6);
+
+    listWithValues.pop_front();
+    EXPECT_EQ(listWithValues.front(), 1);
+    EXPECT_EQ(listWithValues.size(), 5);
+
+    listWithValues.push_back(6);
+    EXPECT_EQ(listWithValues.back(), 6);
+    EXPECT_EQ(listWithValues.size(), 6);
+
+    listWithValues.pop_back();
+    EXPECT_EQ(listWithValues.back(), 5);
+    EXPECT_EQ(listWithValues.size(), 5);
+}
+
+TEST_F(ListTest, PopEmptyThrows) {
+    EXPECT_THROW(emptyList.pop_front(), std::out_of_range);
+    EXPECT_THROW(emptyList.pop_back(), std::out_of_range);
+}
+
+TEST_F(ListTest, InsertErase) {
+    auto it = listWithValues.begin();
+    ++it; // points to 2
+
+    it = listWithValues.insert(it, 10);
+    EXPECT_EQ(*it, 10);
+    EXPECT_EQ(listWithValues.size(), 6);
+
+    it = listWithValues.erase(it);
+    EXPECT_EQ(*it, 2);
+    EXPECT_EQ(listWithValues.size(), 5);
+
+    // Insert at end
+    it = listWithValues.insert(listWithValues.end(), 20);
+    EXPECT_EQ(*it, 20);
+    EXPECT_EQ(listWithValues.back(), 20);
+
+    // Erase last element
+    it = listWithValues.erase(--listWithValues.end());
+    EXPECT_EQ(it, listWithValues.end());
+    EXPECT_EQ(listWithValues.back(), 5);
+}
+
+TEST_F(ListTest, Clear) {
+    EXPECT_FALSE(listWithValues.empty());
+    listWithValues.clear();
+    EXPECT_TRUE(listWithValues.empty());
+    EXPECT_EQ(listWithValues.size(), 0);
+}
+
+TEST_F(ListTest, Resize) {
+    listWithValues.resize(3);
+    EXPECT_EQ(listWithValues.size(), 3);
+    EXPECT_EQ(listWithValues.back(), 3);
+
+    listWithValues.resize(5);
+    EXPECT_EQ(listWithValues.size(), 5);
+    EXPECT_EQ(listWithValues.back(), 0); // default initialized
+
+    listWithValues.resize(5, 10);
+    EXPECT_EQ(listWithValues.size(), 5);
+    EXPECT_EQ(listWithValues.back(), 0); // shouldn't change
+
+    listWithValues.resize(7, 10);
+    EXPECT_EQ(listWithValues.size(), 7);
+    EXPECT_EQ(listWithValues.back(), 10);
+}
+
+TEST_F(ListTest, Swap) {
+    List<int> other{10, 20, 30};
+    listWithValues.swap(other);
+
+    EXPECT_EQ(listWithValues.size(), 3);
+    EXPECT_EQ(listWithValues.front(), 10);
+    EXPECT_EQ(listWithValues.back(), 30);
+
+    EXPECT_EQ(other.size(), 5);
+    EXPECT_EQ(other.front(), 1);
+    EXPECT_EQ(other.back(), 5);
+}
+
+// Test comparison operators
+TEST_F(ListTest, ComparisonOperators) {
+    List<int> same{1, 2, 3, 4, 5};
+    List<int> smaller{1, 2, 3};
+    List<int> greater{1, 2, 3, 4, 5, 6};
+    List<int> different{5, 4, 3, 2, 1};
+
+    // Equality
+    EXPECT_TRUE(listWithValues == same);
+    EXPECT_FALSE(listWithValues == smaller);
+
+    // Inequality
+    EXPECT_TRUE(listWithValues != smaller);
+    EXPECT_FALSE(listWithValues != same);
+
+    // Less than
+    EXPECT_TRUE(smaller < listWithValues);
+    EXPECT_FALSE(listWithValues < smaller);
+    EXPECT_FALSE(listWithValues < same);
+
+    // Less than or equal
+    EXPECT_TRUE(smaller <= listWithValues);
+    EXPECT_TRUE(listWithValues <= same);
+    EXPECT_FALSE(listWithValues <= smaller);
+
+    // Greater than
+    EXPECT_TRUE(listWithValues > smaller);
+    EXPECT_FALSE(smaller > listWithValues);
+    EXPECT_FALSE(listWithValues > same);
+
+    // Greater than or equal
+    EXPECT_TRUE(listWithValues >= smaller);
+    EXPECT_TRUE(listWithValues >= same);
+    EXPECT_FALSE(smaller >= listWithValues);
+
+    // Three-way comparison
+    EXPECT_EQ((listWithValues <=> same), std::strong_ordering::equal);
+    EXPECT_EQ((listWithValues <=> smaller), std::strong_ordering::greater);
+    EXPECT_EQ((smaller <=> listWithValues), std::strong_ordering::less);
+}
+
+TEST_F(ListTest, StringListOperations) {
+    stringList.push_back("four");
+    EXPECT_EQ(stringList.size(), 4);
+    EXPECT_EQ(stringList.back(), "four");
+
+    stringList.pop_front();
+    EXPECT_EQ(stringList.front(), "two");
+
+    auto it = stringList.begin();
+    ++it;
+    it = stringList.insert(it, "inserted");
+    EXPECT_EQ(*it, "inserted");
+    EXPECT_EQ(stringList.size(), 4);
+
+    it = stringList.erase(it);
+    EXPECT_EQ(*it, "three");
+}
+
+// Test const correctness
+TEST_F(ListTest, ConstCorrectness) {
+    const List<int> constList{1, 2, 3};
+
+    EXPECT_EQ(constList.front(), 1);
+    EXPECT_EQ(constList.back(), 3);
+    EXPECT_EQ(constList.size(), 3);
+    EXPECT_FALSE(constList.empty());
+
+    int sum = 0;
+    for (auto it = constList.cbegin(); it != constList.cend(); ++it) {
+        sum += *it;
+    }
+    EXPECT_EQ(sum, 6);
+
+    sum = 0;
+    for (const auto& val : constList) {
+        sum += val;
+    }
+    EXPECT_EQ(sum, 6);
+}
+
+// Test edge cases
+TEST_F(ListTest, SingleElementList) {
+    List<int> single{42};
+
+    EXPECT_EQ(single.size(), 1);
+    EXPECT_EQ(single.front(), 42);
+    EXPECT_EQ(single.back(), 42);
+
+    single.pop_front();
+    EXPECT_TRUE(single.empty());
+
+    single.push_back(100);
+    EXPECT_EQ(single.size(), 1);
+    EXPECT_EQ(single.front(), 100);
+    EXPECT_EQ(single.back(), 100);
+
+    single.pop_back();
+    EXPECT_TRUE(single.empty());
+}
+
+TEST_F(ListTest, LargeList) {
+    const int largeSize = 10000;
+    List<int> largeList;
+
+    for (int i = 0; i < largeSize; ++i) {
+        largeList.push_back(i);
     }
 
-    int expected = 1;
-    for(auto&& item : other) {
-        EXPECT_EQ(item, expected++);
+    EXPECT_EQ(largeList.size(), largeSize);
+    EXPECT_EQ(largeList.front(), 0);
+    EXPECT_EQ(largeList.back(), largeSize - 1);
+
+    int count = 0;
+    for (auto it = largeList.begin(); it != largeList.end(); ++it) {
+        EXPECT_EQ(*it, count++);
     }
-}*/
 
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    largeList.clear();
+    EXPECT_TRUE(largeList.empty());
 }
