@@ -31,6 +31,8 @@ namespace my_cont {
 
             Node(const T& val, Node* p = nullptr, Node* n = nullptr)
                 : data(val), prev(p), next(n) {}
+
+            friend class List;
         };
 
         Node* head;

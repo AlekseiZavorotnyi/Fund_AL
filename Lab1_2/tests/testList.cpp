@@ -14,8 +14,8 @@ protected:
 };
 
 TEST_F(TestFoo, DefaultConstructor) {
-    EXPECT_EQ(emptyList.size(), 5);
-    EXPECT_FALSE(emptyList.empty());
+    EXPECT_EQ(testList.size(), 5);
+    EXPECT_FALSE(testList.empty());
 }
 
 /*TEST_F(TestFoo, InitializerListConstructor) {
