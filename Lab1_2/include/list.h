@@ -17,7 +17,7 @@ namespace my_cont {
 
         [[nodiscard]] virtual bool empty() const = 0;
         [[nodiscard]] virtual std::size_t size() const = 0;
-        [[nodiscard]] virtual std::size_t max_size() const = 0;
+        //[[nodiscard]] virtual std::size_t max_size() const = 0;
     };
 
     template <typename T>
@@ -48,8 +48,9 @@ namespace my_cont {
             ListIterator(Node* node = nullptr) : current(node) {}
 
             IterType operator*() const { return *current->data; }
+            IterType* operator->() const { return &current->data; }
 
-            ListIterator& operator++() {
+            ListIterator operator++() {
                 current = current->next;
                 return *this;
             }
@@ -60,7 +61,7 @@ namespace my_cont {
                 return tmp;
             }
 
-            ListIterator& operator--() {
+            ListIterator operator--() {
                 current = current->prev;
                 return *this;
             }
@@ -84,18 +85,17 @@ namespace my_cont {
 
         template <typename IterType>
         class ListReverseIterator {
+        private:
+            Node* current;
+            friend class List;
         public:
-            using value_type = IterType;
-            using difference_type = std::ptrdiff_t;
-            using pointer = IterType*;
-            using reference = IterType&;
 
             ListReverseIterator(Node* node = nullptr) : current(node) {}
 
-            reference operator*() const { return current->data; }
-            pointer operator->() const { return &current->data; }
+            IterType operator*() const { return current->data; }
+            IterType* operator->() const { return &current->data; }
 
-            ListReverseIterator& operator++() {
+            ListReverseIterator operator++() {
                 current = current->prev;
                 return *this;
             }
@@ -106,7 +106,7 @@ namespace my_cont {
                 return tmp;
             }
 
-            ListReverseIterator& operator--() {
+            ListReverseIterator operator--() {
                 current = current->next;
                 return *this;
             }
@@ -124,10 +124,6 @@ namespace my_cont {
             bool operator!=(const ListReverseIterator& other) const {
                 return !(*this == other);
             }
-
-        private:
-            Node* current;
-            friend class List;
         };
 
         using iterator = ListIterator<T>;
@@ -184,19 +180,15 @@ namespace my_cont {
         }
 
         iterator begin() { return iterator(head); }
-        const_iterator begin() const { return const_iterator(head); }
         const_iterator cbegin() const { return const_iterator(head); }
 
         iterator end() { return iterator(nullptr); }
-        const_iterator end() const { return const_iterator(nullptr); }
         const_iterator cend() const { return const_iterator(nullptr); }
 
         reverse_iterator rbegin() { return reverse_iterator(tail); }
-        const_reverse_iterator rbegin() const { return const_reverse_iterator(tail); }
         const_reverse_iterator crbegin() const { return const_reverse_iterator(tail); }
 
         reverse_iterator rend() { return reverse_iterator(nullptr); }
-        const_reverse_iterator rend() const { return const_reverse_iterator(nullptr); }
         const_reverse_iterator crend() const { return const_reverse_iterator(nullptr); }
 
         [[nodiscard]] bool empty() const override { return cap == 0; }
@@ -313,15 +305,6 @@ namespace my_cont {
             }
             while (cap < count) {
                 push_back(T());
-            }
-        }
-
-        void resize(std::size_t count, const T& value) {
-            while (cap > count) {
-                pop_back();
-            }
-            while (cap < count) {
-                push_back(value);
             }
         }
 
