@@ -49,7 +49,7 @@ namespace my_cont {
 
             ListIterator(Node* node = nullptr) : current(node) {}
 
-            IterType operator*() const { return *current->data; }
+            IterType& operator*() const { return current->data; }
             IterType* operator->() const { return &current->data; }
 
             ListIterator operator++() {
@@ -182,9 +182,11 @@ namespace my_cont {
         }
 
         iterator begin() { return iterator(head); }
+        const_iterator begin() const { return const_iterator(head); }
         const_iterator cbegin() const { return const_iterator(head); }
 
         iterator end() { return iterator(nullptr); }
+        const_iterator end() const { return const_iterator(nullptr); }
         const_iterator cend() const { return const_iterator(nullptr); }
 
         reverse_iterator rbegin() { return reverse_iterator(tail); }
@@ -207,58 +209,64 @@ namespace my_cont {
         }
 
         void clear() {
-            while (!empty()) {
-                pop_front();
+            while (head) {
+                Node* temp = head;
+                head = head->next;
+                delete temp;
             }
+            tail = nullptr;
+            cap = 0;
         }
 
         iterator insert(iterator pos, const T& value) {
-            if (pos == begin()) {
-                push_front(value);
-                return begin();
-            } else if (pos == end()) {
+            if (pos == end()) {
                 push_back(value);
                 return iterator(tail);
+            } else if (pos == begin()) {
+                push_front(value);
+                return begin();
             } else {
-                Node* new_node = new Node(value, pos.current->prev, pos.current);
-                pos.current->prev->next = new_node;
-                pos.current->prev = new_node;
+                Node* newNode = new Node(value, pos.current->prev, pos.current);
+                pos.current->prev->next = newNode;
+                pos.current->prev = newNode;
                 ++cap;
-                return iterator(new_node);
+                return iterator(newNode);
             }
         }
 
         iterator erase(iterator pos) {
-            if (pos == end()) return end();
-
-            Node* to_delete = pos.current;
-            iterator next_it(to_delete->next);
-
-            if (to_delete->prev) {
-                to_delete->prev->next = to_delete->next;
-            } else {
-                head = to_delete->next;
+            if (pos == end() || empty()) {
+                return end();
             }
 
-            if (to_delete->next) {
-                to_delete->next->prev = to_delete->prev;
+            Node* toDelete = pos.current;
+            iterator nextIter(toDelete->next);
+
+            if (toDelete->prev) {
+                toDelete->prev->next = toDelete->next;
             } else {
-                tail = to_delete->prev;
+                head = toDelete->next;
             }
 
-            delete to_delete;
+            if (toDelete->next) {
+                toDelete->next->prev = toDelete->prev;
+            } else {
+                tail = toDelete->prev;
+            }
+
+            delete toDelete;
             --cap;
-            return next_it;
+            return nextIter;
         }
 
         void push_back(const T& value) {
-            Node* new_node = new Node(value, tail, nullptr);
+            Node* newNode = new Node(value, tail, nullptr);
             if (tail) {
-                tail->next = new_node;
+                tail->next = newNode;
             } else {
-                head = new_node;
+                head = newNode;
             }
-            tail = new_node;
+            tail = newNode;
             ++cap;
         }
 
@@ -333,20 +341,20 @@ namespace my_cont {
             return !(*this == other);
         }
 
-        auto operator<=>(const List& other) const {
-            auto it1 = begin();
+        std::strong_ordering operator<=>(const List& other) const {
+            auto it1 = this->begin();
             auto it2 = other.begin();
 
-            while (it1 != end() && it2 != other.end()) {
+            while (it1 != this->end() && it2 != other.end()) {
                 if (auto cmp = *it1 <=> *it2; cmp != 0) {
                     return cmp;
                 }
                 ++it1;
                 ++it2;
             }
-
-            return cap <=> other.cap;
+            return std::strong_ordering::equal;
         }
+
     };
 }
 
