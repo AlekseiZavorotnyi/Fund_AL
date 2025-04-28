@@ -1,5 +1,5 @@
-#ifndef MY_LIB_H
-#define MY_LIB_H
+#ifndef LIST_H
+#define LIST_H
 #include <cstddef>
 #include <stdexcept>
 #include <algorithm>

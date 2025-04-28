@@ -171,7 +171,7 @@ namespace my_cont {
         }
 
         ~List() override {
-            clear();
+            List<T>::clear();
         }
 
         List& operator=(const List& other) {
@@ -197,33 +197,33 @@ namespace my_cont {
             return *this;
         }
 
-        iterator begin() const { return iterator(head); }
-        const_iterator cbegin() const { return const_iterator(head); }
+        virtual iterator begin() const { return iterator(head); }
+        virtual const_iterator cbegin() const { return const_iterator(head); }
 
-        iterator end() const { return iterator(nullptr); }
-        const_iterator cend() const { return const_iterator(nullptr); }
+        virtual iterator end() const { return iterator(nullptr); }
+        virtual const_iterator cend() const { return const_iterator(nullptr); }
 
-        reverse_iterator rbegin() { return reverse_iterator(tail); }
-        const_reverse_iterator crbegin() const { return const_reverse_iterator(tail); }
+        virtual reverse_iterator rbegin() const { return reverse_iterator(tail); }
+        virtual const_reverse_iterator crbegin() const { return const_reverse_iterator(tail); }
 
-        reverse_iterator rend() { return reverse_iterator(nullptr); }
-        const_reverse_iterator crend() const { return const_reverse_iterator(nullptr); }
+        virtual reverse_iterator rend() const { return reverse_iterator(nullptr); }
+        virtual const_reverse_iterator crend() const { return const_reverse_iterator(nullptr); }
 
         [[nodiscard]] bool empty() const override { return cap == 0; }
         [[nodiscard]] std::size_t size() const override { return cap; }
         [[nodiscard]] std::size_t max_size() const override { return cap; }
 
-        T& front() {
+        virtual T& front() {
             if (empty() || !head) throw std::out_of_range("List is empty");
             return head->data;
         }
 
-        T& back() {
+        virtual T& back() {
             if (empty()) throw std::out_of_range("List is empty");
             return tail->data;
         }
 
-        void clear() {
+        virtual void clear() {
             while (head) {
                 Node* temp = head;
                 head = head->next;
@@ -233,7 +233,7 @@ namespace my_cont {
             cap = 0;
         }
 
-        iterator insert(iterator pos, const T& value) {
+        virtual iterator insert(iterator pos, const T& value) {
             if (pos == end()) {
                 push_back(value);
                 return iterator(tail);
@@ -251,7 +251,7 @@ namespace my_cont {
             }
         }
 
-        iterator erase(iterator pos) {
+        virtual iterator erase(iterator pos) {
             if (pos == end() || empty()) {
                 return end();
             }
@@ -279,7 +279,7 @@ namespace my_cont {
         }
 
 
-        void push_back(const T& value) {
+        virtual void push_back(const T& value) {
             Node* newNode = new Node(value, tail, nullptr);
             if (tail) {
                 tail->next = newNode;
@@ -290,7 +290,7 @@ namespace my_cont {
             ++cap;
         }
 
-        void pop_back() {
+        virtual void pop_back() {
             if (empty()) throw std::out_of_range("List is empty");
 
             Node* to_delete = tail;
@@ -304,7 +304,7 @@ namespace my_cont {
             --cap;
         }
 
-        void push_front(const T& value) {
+        virtual void push_front(const T& value) {
             Node* new_node = new Node(value, nullptr, head);
             if (head) {
                 head->prev = new_node;
@@ -315,7 +315,7 @@ namespace my_cont {
             ++cap;
         }
 
-        void pop_front() {
+        virtual void pop_front() {
             if (empty()) throw std::out_of_range("List is empty");
 
             Node* to_delete = head;
@@ -329,7 +329,7 @@ namespace my_cont {
             --cap;
         }
 
-        void resize(std::size_t count) {
+        virtual void resize(std::size_t count) {
             while (cap > count) {
                 pop_back();
             }
@@ -338,7 +338,7 @@ namespace my_cont {
             }
         }
 
-        void swap(List& other) noexcept {
+        virtual void swap(List& other) noexcept {
             std::swap(head, other.head);
             std::swap(tail, other.tail);
             std::swap(cap, other.cap);
