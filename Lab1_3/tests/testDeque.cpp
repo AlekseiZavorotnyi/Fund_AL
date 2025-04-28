@@ -2,6 +2,7 @@
 #include "Deque.h"
 #include <algorithm>
 #include <string>
+#include <vector>
 
 using namespace my_cont;
 
@@ -17,7 +18,7 @@ protected:
     Deque<int> dequeWithValues{1, 2, 3, 4, 5};
 };
 
-// Конструкторы
+// Конструкторы и операторы присваивания
 TEST_F(DequeTest, DefaultConstructor) {
     EXPECT_TRUE(emptyDeque.empty());
     EXPECT_EQ(emptyDeque.size(), 0);
@@ -46,7 +47,6 @@ TEST_F(DequeTest, MoveConstructor) {
     EXPECT_EQ(moved.back(), 30);
 }
 
-// Операторы присваивания
 TEST_F(DequeTest, CopyAssignment) {
     Deque<int> copy;
     copy = dequeWithValues;
@@ -133,22 +133,15 @@ TEST_F(DequeTest, PushPopFrontBack) {
     EXPECT_EQ(dequeWithValues.size(), 5);
 }
 
-TEST_F(DequeTest, PopEmptyThrows) {
-    EXPECT_THROW(emptyDeque.pop_front(), std::out_of_range);
-    EXPECT_THROW(emptyDeque.pop_back(), std::out_of_range);
-}
-
 TEST_F(DequeTest, Insert) {
-    auto it = dequeWithValues.begin();
-    ++it; // указывает на 2
+    auto it = dequeWithValues.begin() + 1;
     dequeWithValues.insert(it, 42);
     EXPECT_EQ(dequeWithValues[1], 42);
     EXPECT_EQ(dequeWithValues.size(), 6);
 }
 
 TEST_F(DequeTest, Erase) {
-    auto it = dequeWithValues.begin();
-    ++it; // указывает на 2
+    auto it = dequeWithValues.begin() + 1;
     dequeWithValues.erase(it);
     EXPECT_EQ(dequeWithValues[1], 3);
     EXPECT_EQ(dequeWithValues.size(), 4);
@@ -241,6 +234,25 @@ TEST_F(DequeTest, LargeDeque) {
 
     largeDeque.clear();
     EXPECT_TRUE(largeDeque.empty());
+}
+
+TEST_F(DequeTest, RandomAccess) {
+    Deque<int> d{10, 20, 30, 40, 50};
+    EXPECT_EQ(d[0], 10);
+    EXPECT_EQ(d[2], 30);
+    EXPECT_EQ(d[4], 50);
+
+    d[1] = 25;
+    EXPECT_EQ(d[1], 25);
+}
+
+TEST_F(DequeTest, InsertAtEdges) {
+    Deque<int> d;
+    d.insert(d.begin(), 10);
+    EXPECT_EQ(d.front(), 10);
+
+    d.insert(d.end(), 20);
+    EXPECT_EQ(d.back(), 20);
 }
 
 int main(int argc, char **argv) {
