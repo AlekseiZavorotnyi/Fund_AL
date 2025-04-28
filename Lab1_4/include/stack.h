@@ -18,30 +18,36 @@ namespace my_cont {
             }
         }
 
-        Stack(const Stack& other) : Stack() {
-            stack(other.stack);
-        }
+        Stack(const Stack& other) : stack(other.stack) {}
 
-        Stack(Stack&& other) noexcept{
-            stack(other.stack);
-        }
+        Stack(Stack&& other) noexcept : stack(std::move(other.stack)){}
 
         ~Stack() {
             stack.clear();
         }
 
         Stack& operator=(const Stack& other) {
-            stack = other.stack;
+            if (this != &other) {
+                stack.clear();
+                stack = Container(other.stack);
+            }
             return *this;
         }
 
         Stack& operator=(Stack&& other) noexcept {
-            stack = other.stack;
+            if (this != &other) {
+                stack = other.stack;
+                other.stack = Container();
+            }
             return *this;
         }
 
-        [[nodiscard]] bool empty() const { return stack.cap == 0; }
-        [[nodiscard]] std::size_t size() const { return stack.cap; }
+        T &top() {
+            return stack.front();
+        }
+
+        [[nodiscard]] bool empty() const { return stack.size() == 0; }
+        [[nodiscard]] std::size_t size() const { return stack.size(); }
 
         void push(const T& value) {
             stack.push_front(value);
@@ -52,7 +58,7 @@ namespace my_cont {
         }
 
         void swap(Stack& other) noexcept {
-            stack.swap(other);
+            stack.swap(other.stack);
         }
 
         bool operator==(const Stack &other) const {

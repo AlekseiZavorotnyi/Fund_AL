@@ -5,7 +5,7 @@
 
 using namespace my_cont;
 
-class ListTest : public ::testing::Test {
+class StackTest : public ::testing::Test {
 protected:
     void SetUp() override {
     }
@@ -13,294 +13,167 @@ protected:
     void TearDown() override {
     }
 
-    List<int> emptyList;
-    List<int> listWithValues{1, 2, 3, 4, 5};
+    Stack<int> emptyStack;
+    Stack<int> stackWithValues{1, 2, 3, 4, 5};
 };
 
-TEST_F(ListTest, DefaultConstructor) {
-    EXPECT_TRUE(emptyList.empty());
-    EXPECT_EQ(emptyList.size(), 0);
+TEST_F(StackTest, DefaultConstructor) {
+    EXPECT_TRUE(emptyStack.empty());
+    EXPECT_EQ(emptyStack.size(), 0);
 }
 
-TEST_F(ListTest, InitializerListConstructor) {
-    EXPECT_FALSE(listWithValues.empty());
-    EXPECT_EQ(listWithValues.size(), 5);
+TEST_F(StackTest, InitializerListConstructor) {
+    EXPECT_FALSE(stackWithValues.empty());
+    EXPECT_EQ(stackWithValues.size(), 5);
 
-    EXPECT_EQ(listWithValues.front(), 1);
-    EXPECT_EQ(listWithValues.back(), 5);
+    EXPECT_EQ(stackWithValues.top(), 5);
 }
 
-TEST_F(ListTest, CopyConstructor) {
-    List<int> copy(listWithValues);
+TEST_F(StackTest, CopyConstructor) {
+    Stack<int> copy(stackWithValues);
 
-    EXPECT_EQ(copy.size(), listWithValues.size());
-    EXPECT_EQ(copy.front(), listWithValues.front());
-    EXPECT_EQ(copy.back(), listWithValues.back());
+    EXPECT_EQ(copy.size(), stackWithValues.size());
+    EXPECT_EQ(copy.top(), stackWithValues.top());
 
-    listWithValues.pop_front();
-    EXPECT_NE(copy.front(), listWithValues.front());
+    stackWithValues.pop();
     EXPECT_EQ(copy.size(), 5);
 }
 
-TEST_F(ListTest, MoveConstructor) {
-    List<int> original{10, 20, 30};
-    List<int> moved(std::move(original));
+TEST_F(StackTest, MoveConstructor) {
+    Stack<int> original{10, 20, 30};
+    Stack<int> moved(std::move(original));
 
     EXPECT_TRUE(original.empty());
     EXPECT_EQ(moved.size(), 3);
-    EXPECT_EQ(moved.front(), 10);
-    EXPECT_EQ(moved.back(), 30);
+    EXPECT_EQ(moved.top(), 30);
 }
 
-TEST_F(ListTest, CopyAssignment) {
-    List<int> copy;
-    copy = listWithValues;
+TEST_F(StackTest, CopyAssignment) {
+    Stack<int> copy;
+    copy = stackWithValues;
 
-    EXPECT_EQ(copy.size(), listWithValues.size());
-    EXPECT_EQ(copy.front(), listWithValues.front());
-    EXPECT_EQ(copy.back(), listWithValues.back());
+    EXPECT_EQ(copy.size(), stackWithValues.size());
+    EXPECT_EQ(copy.top(), stackWithValues.top());
 
     copy = copy;
     EXPECT_EQ(copy.size(), 5);
 }
 
-TEST_F(ListTest, MoveAssignment) {
-    List<int> original{10, 20, 30};
-    List<int> moved;
+TEST_F(StackTest, MoveAssignment) {
+    Stack<int> original{10, 20, 30};
+    Stack<int> moved;
     moved = std::move(original);
 
     EXPECT_TRUE(original.empty());
     EXPECT_EQ(moved.size(), 3);
-    EXPECT_EQ(moved.front(), 10);
-    EXPECT_EQ(moved.back(), 30);
+    EXPECT_EQ(moved.top(), 30);
 }
 
-TEST_F(ListTest, FrontAndBack) {
-    EXPECT_EQ(listWithValues.front(), 1);
-    EXPECT_EQ(listWithValues.back(), 5);
+TEST_F(StackTest, Top) {
+    EXPECT_EQ(stackWithValues.top(), 5);
 
-    listWithValues.push_front(0);
-    EXPECT_EQ(listWithValues.front(), 0);
+    stackWithValues.push(0);
+    EXPECT_EQ(stackWithValues.top(), 0);
 
-    listWithValues.push_back(6);
-    EXPECT_EQ(listWithValues.back(), 6);
 }
 
-TEST_F(ListTest, FrontBackThrowWhenEmpty) {
-    EXPECT_THROW(emptyList.front(), std::out_of_range);
-    EXPECT_THROW(emptyList.back(), std::out_of_range);
+TEST_F(StackTest, TopThrowWhenEmpty) {
+    EXPECT_THROW(emptyStack.top(), std::out_of_range);
 }
 
-TEST_F(ListTest, Iterators) {
-    int expected = 1;
-    for (auto it = listWithValues.begin(); it != listWithValues.end(); ++it) {
-        EXPECT_EQ(*it, expected++);
-    }
+TEST_F(StackTest, EmptyAndSize) {
+    EXPECT_TRUE(emptyStack.empty());
+    EXPECT_EQ(emptyStack.size(), 0);
 
-    expected = 1;
-    for (auto it = listWithValues.cbegin(); it != listWithValues.cend(); ++it) {
-        EXPECT_EQ(*it, expected++);
-    }
-
-    expected = 5;
-    for (auto it = listWithValues.rbegin(); it != listWithValues.rend(); ++it) {
-        EXPECT_EQ(*it, expected--);
-    }
-
-    expected = 5;
-    for (auto it = listWithValues.crbegin(); it != listWithValues.crend(); ++it) {
-        EXPECT_EQ(*it, expected--);
-    }
+    EXPECT_FALSE(stackWithValues.empty());
+    EXPECT_EQ(stackWithValues.size(), 5);
 }
 
-TEST_F(ListTest, IteratorOperations) {
-    auto it1 = listWithValues.begin();
-    auto it2 = it1;
-    ++it2;
+TEST_F(StackTest, PushPop) {
+    stackWithValues.push(0);
+    EXPECT_EQ(stackWithValues.top(), 0);
+    EXPECT_EQ(stackWithValues.size(), 6);
 
-    EXPECT_EQ(*it1, 1);
-    EXPECT_EQ(*it2, 2);
-
-    --it2;
-    EXPECT_EQ(it1, it2);
-
-    it1++;
-    EXPECT_NE(it1, it2);
-
-    it1--;
-    EXPECT_EQ(it1, it2);
+    stackWithValues.pop();
+    EXPECT_EQ(stackWithValues.top(), 5);
+    EXPECT_EQ(stackWithValues.size(), 5);
 }
 
-TEST_F(ListTest, EmptyAndSize) {
-    EXPECT_TRUE(emptyList.empty());
-    EXPECT_EQ(emptyList.size(), 0);
-
-    EXPECT_FALSE(listWithValues.empty());
-    EXPECT_EQ(listWithValues.size(), 5);
+TEST_F(StackTest, PopEmptyThrows) {
+    EXPECT_THROW(emptyStack.pop(), std::out_of_range);
 }
 
-TEST_F(ListTest, PushPopFrontBack) {
-    listWithValues.push_front(0);
-    EXPECT_EQ(listWithValues.front(), 0);
-    EXPECT_EQ(listWithValues.size(), 6);
+TEST_F(StackTest, Swap) {
+    Stack<int> other{10, 20, 30};
+    stackWithValues.swap(other);
 
-    listWithValues.pop_front();
-    EXPECT_EQ(listWithValues.front(), 1);
-    EXPECT_EQ(listWithValues.size(), 5);
-
-    listWithValues.push_back(6);
-    EXPECT_EQ(listWithValues.back(), 6);
-    EXPECT_EQ(listWithValues.size(), 6);
-
-    listWithValues.pop_back();
-    EXPECT_EQ(listWithValues.back(), 5);
-    EXPECT_EQ(listWithValues.size(), 5);
-}
-
-TEST_F(ListTest, PopEmptyThrows) {
-    EXPECT_THROW(emptyList.pop_front(), std::out_of_range);
-    EXPECT_THROW(emptyList.pop_back(), std::out_of_range);
-}
-
-TEST_F(ListTest, Insert) {
-    auto it = listWithValues.begin().next();
-    listWithValues.insert(it, 42);
-    auto itCheck = listWithValues.begin();
-    ++itCheck;
-    EXPECT_EQ(*itCheck, 42);
-    EXPECT_EQ(listWithValues.size(), 6);
-}
-
-TEST_F(ListTest, Erase) {
-    auto it = listWithValues.begin().next();
-    listWithValues.erase(it);
-    auto itCheck = ++listWithValues.begin();
-    EXPECT_EQ(*itCheck, 3);
-    EXPECT_EQ(listWithValues.size(), 4);
-
-    List<int> l = {1, 2, 3, 4, 5};
-    l.erase(l.begin());
-    EXPECT_EQ(l.size(), 4);
-    EXPECT_EQ(l.front(), 2);
-
-    l.erase(l.begin().next(3));
-    EXPECT_EQ(l.back(), 4);
-    EXPECT_EQ(l.size(), 3);
-}
-
-
-TEST_F(ListTest, Clear) {
-    EXPECT_FALSE(listWithValues.empty());
-    listWithValues.clear();
-    EXPECT_TRUE(listWithValues.empty());
-    EXPECT_EQ(listWithValues.size(), 0);
-}
-
-TEST_F(ListTest, Resize) {
-    listWithValues.resize(3, 0);
-    EXPECT_EQ(listWithValues.size(), 3);
-    EXPECT_EQ(listWithValues.back(), 3);
-
-    listWithValues.resize(5, 0);
-    EXPECT_EQ(listWithValues.size(), 5);
-    EXPECT_EQ(listWithValues.back(), 0);
-}
-
-TEST_F(ListTest, Swap) {
-    List<int> other{10, 20, 30};
-    listWithValues.swap(other);
-
-    EXPECT_EQ(listWithValues.size(), 3);
-    EXPECT_EQ(listWithValues.front(), 10);
-    EXPECT_EQ(listWithValues.back(), 30);
+    EXPECT_EQ(stackWithValues.size(), 3);
+    EXPECT_EQ(stackWithValues.top(), 30);
 
     EXPECT_EQ(other.size(), 5);
-    EXPECT_EQ(other.front(), 1);
-    EXPECT_EQ(other.back(), 5);
+    EXPECT_EQ(other.top(), 5);
 }
 
-TEST_F(ListTest, ComparisonOperators) {
-    List<int> same{1, 2, 3, 4, 5};
-    List<int> smaller{1, 2, 3};
-    List<int> smaller2{1, 2, 2};
-    List<int> greater{1, 2, 3, 4, 5, 6};
-    List<int> greater2{1, 2, 4};
-    List<int> different{5, 4, 3, 2, 1};
+TEST_F(StackTest, ComparisonOperators) {
+    Stack<int> same{1, 2, 3, 4, 5};
+    Stack<int> smaller{1, 2, 3};
+    Stack<int> smaller2{1, 2, 2};
+    Stack<int> greater{1, 2, 3, 4, 5, 6};
+    Stack<int> greater2{1, 2, 4};
+    Stack<int> different{5, 4, 3, 2, 1};
 
 
-    EXPECT_TRUE(listWithValues == same);
-    EXPECT_FALSE(listWithValues == smaller);
+    EXPECT_TRUE(stackWithValues == same);
+    EXPECT_FALSE(stackWithValues == smaller);
 
-    EXPECT_TRUE(listWithValues != smaller);
-    EXPECT_FALSE(listWithValues != same);
+    EXPECT_TRUE(stackWithValues != smaller);
+    EXPECT_FALSE(stackWithValues != same);
 
-    EXPECT_TRUE(smaller < listWithValues);
-    EXPECT_TRUE(smaller2 < listWithValues);
-    EXPECT_FALSE(listWithValues < smaller);
-    EXPECT_FALSE(listWithValues < same);
+    EXPECT_TRUE(smaller < stackWithValues);
+    EXPECT_TRUE(smaller2 < stackWithValues);
+    EXPECT_FALSE(stackWithValues < smaller);
+    EXPECT_FALSE(stackWithValues < same);
 
-    EXPECT_TRUE(smaller <= listWithValues);
-    EXPECT_TRUE(listWithValues <= same);
-    EXPECT_FALSE(listWithValues <= smaller2);
+    EXPECT_TRUE(smaller <= stackWithValues);
+    EXPECT_TRUE(stackWithValues <= same);
+    EXPECT_FALSE(stackWithValues <= smaller2);
 
-    EXPECT_TRUE(listWithValues > smaller);
-    EXPECT_TRUE(greater > listWithValues);
-    EXPECT_TRUE(greater2 > listWithValues);
-    EXPECT_FALSE(smaller > listWithValues);
-    EXPECT_FALSE(listWithValues > same);
+    EXPECT_TRUE(stackWithValues > smaller);
+    EXPECT_TRUE(greater > stackWithValues);
+    EXPECT_TRUE(greater2 > stackWithValues);
+    EXPECT_FALSE(smaller > stackWithValues);
+    EXPECT_FALSE(stackWithValues > same);
 
-    EXPECT_TRUE(listWithValues >= smaller);
-    EXPECT_TRUE(listWithValues >= same);
-    EXPECT_FALSE(smaller >= listWithValues);
+    EXPECT_TRUE(stackWithValues >= smaller);
+    EXPECT_TRUE(stackWithValues >= same);
+    EXPECT_FALSE(smaller >= stackWithValues);
 
-    EXPECT_EQ((listWithValues <=> same), std::strong_ordering::equal);
-    EXPECT_EQ((listWithValues <=> smaller), std::strong_ordering::greater);
-    EXPECT_EQ((smaller <=> listWithValues), std::strong_ordering::less);
-    EXPECT_EQ((listWithValues <=> greater), std::strong_ordering::less);
-    EXPECT_EQ((greater <=> listWithValues), std::strong_ordering::greater);
-    EXPECT_EQ((listWithValues <=> smaller2), std::strong_ordering::greater);
-    EXPECT_EQ((smaller2 <=> listWithValues), std::strong_ordering::less);
+    EXPECT_EQ((stackWithValues <=> same), std::strong_ordering::equal);
+    EXPECT_EQ((stackWithValues <=> smaller), std::strong_ordering::greater);
+    EXPECT_EQ((smaller <=> stackWithValues), std::strong_ordering::less);
+    EXPECT_EQ((stackWithValues <=> greater), std::strong_ordering::less);
+    EXPECT_EQ((greater <=> stackWithValues), std::strong_ordering::greater);
+    EXPECT_EQ((stackWithValues <=> smaller2), std::strong_ordering::greater);
+    EXPECT_EQ((smaller2 <=> stackWithValues), std::strong_ordering::less);
 }
 
-TEST_F(ListTest, SingleElementList) {
-    List<int> single{42};
+TEST_F(StackTest, SingleElementList) {
+    Stack<int> single{42};
 
     EXPECT_EQ(single.size(), 1);
-    EXPECT_EQ(single.front(), 42);
-    EXPECT_EQ(single.back(), 42);
+    EXPECT_EQ(single.top(), 42);
 
-    single.pop_front();
+    single.pop();
     EXPECT_TRUE(single.empty());
 
-    single.push_back(100);
+    single.push(100);
     EXPECT_EQ(single.size(), 1);
-    EXPECT_EQ(single.front(), 100);
-    EXPECT_EQ(single.back(), 100);
+    EXPECT_EQ(single.top(), 100);
 
-    single.pop_back();
+    single.pop();
     EXPECT_TRUE(single.empty());
 }
 
-TEST_F(ListTest, LargeList) {
-    const int largeSize = 10000;
-    List<int> largeList;
-
-    for (int i = 0; i < largeSize; ++i) {
-        largeList.push_back(i);
-    }
-
-    EXPECT_EQ(largeList.size(), largeSize);
-    EXPECT_EQ(largeList.front(), 0);
-    EXPECT_EQ(largeList.back(), largeSize - 1);
-
-    int count = 0;
-    for (auto it = largeList.begin(); it != largeList.end(); ++it) {
-        EXPECT_EQ(*it, count++);
-    }
-
-    largeList.clear();
-    EXPECT_TRUE(largeList.empty());
-}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
