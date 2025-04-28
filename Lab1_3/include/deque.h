@@ -53,7 +53,7 @@ namespace my_cont {
             if (pos >= list.size()) {
                 throw std::out_of_range("Deque::at. Pos is unreal.");
             }
-            auto it = list.cbegin().next(pos);
+            auto it = list.begin().next(pos);
             return *it;
         }
 
@@ -61,7 +61,7 @@ namespace my_cont {
             if (pos >= list.size()) {
                 throw std::out_of_range("Deque::[]. Pos is unreal.");
             }
-            auto it = list.cbegin();
+            auto it = list.begin();
             while(pos > 0) {
                 ++it;
                 pos--;
@@ -77,10 +77,10 @@ namespace my_cont {
             return list.back();
         }
 
-        using Iterator = typename List<T>::Iterator;
-        using ConstIterator = typename List<T>::ConstIterator;
-        using ReverseIterator = typename List<T>::ReverseIterator;
-        using ConstReverseIterator = typename List<T>::ConstReverseIterator;
+        using Iterator = List<T>::iterator;
+        using ConstIterator = List<T>::const_iterator;
+        using ReverseIterator = List<T>::reverse_iterator;
+        using ConstReverseIterator = List<T>::const_reverse_iterator;
 
         Iterator begin() const override {
             return list.begin();
@@ -130,15 +130,15 @@ namespace my_cont {
             list.clear();
         }
 
-        void insert(ConstIterator posIter, T val) override {
-            list.insert(posIter, val);
+        Iterator insert(Iterator posIter, const T& val) override {
+            return list.insert(posIter, val);
         }
 
-        Iterator erase(ConstIterator posIter) override {
+        Iterator erase(Iterator posIter) override {
             return list.erase(posIter);
         }
 
-        void push_back(T val) override {
+        void push_back(const T& val) override {
             list.push_back(val);
         }
 
@@ -146,7 +146,7 @@ namespace my_cont {
             list.pop_back();
         }
 
-        void push_front(T val) override {
+        void push_front(const T& val) override {
             list.push_front(val);
         }
 
