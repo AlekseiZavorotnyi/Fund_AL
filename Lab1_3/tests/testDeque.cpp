@@ -134,14 +134,14 @@ TEST_F(DequeTest, PushPopFrontBack) {
 }
 
 TEST_F(DequeTest, Insert) {
-    auto it = dequeWithValues.begin() + 1;
+    auto it = ++dequeWithValues.begin();
     dequeWithValues.insert(it, 42);
     EXPECT_EQ(dequeWithValues[1], 42);
     EXPECT_EQ(dequeWithValues.size(), 6);
 }
 
 TEST_F(DequeTest, Erase) {
-    auto it = dequeWithValues.begin() + 1;
+    auto it = ++dequeWithValues.begin();
     dequeWithValues.erase(it);
     EXPECT_EQ(dequeWithValues[1], 3);
     EXPECT_EQ(dequeWithValues.size(), 4);
