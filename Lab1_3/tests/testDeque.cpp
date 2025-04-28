@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "Deque.h"
+#include "deque.h"
 #include <algorithm>
 #include <string>
 #include <vector>

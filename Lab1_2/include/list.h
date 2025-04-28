@@ -361,6 +361,35 @@ namespace my_cont {
             return !(*this == other);
         }
 
+        bool operator<(const List& other) const {
+            auto it1 = begin();
+            auto it2 = other.begin();
+
+            while (it1 != end() && it2 != other.end()) {
+                if (auto cmp = *it1 < *it2; cmp != 0) {
+                    return cmp;
+                }
+                ++it1;
+                ++it2;
+            }
+
+            return size() < other.size();
+        }
+
+        bool operator<=(const List& other)
+        {
+            return (*this < other || *this == other);
+        }
+
+        bool operator>=(const List& other)
+        {
+            return !(*this < other);
+        }
+
+        bool operator>(const List &other) const {
+            return !(*this <= other);
+        }
+
         std::strong_ordering operator<=>(const List& other) const {
             auto it1 = begin();
             auto it2 = other.begin();

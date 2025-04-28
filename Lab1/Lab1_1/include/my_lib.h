@@ -301,7 +301,7 @@ namespace my_cont {
             return !(*this == other);
         }
 
-        bool operator<(Array& other)
+        bool operator<(const Array& other)
         {
             const std::size_t less_len = (this->cap > other.cap) ? other.cap : this->cap;
 
@@ -316,12 +316,12 @@ namespace my_cont {
             return this->cap < other.cap;
         }
 
-        bool operator<=(Array& other)
+        bool operator<=(const Array& other)
         {
             return (*this < other || *this == other);
         }
 
-        bool operator>=(Array& other)
+        bool operator>=(const Array& other)
         {
             return !(*this < other);
         }

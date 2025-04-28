@@ -33,6 +33,7 @@ namespace my_cont {
 
         Deque &operator=(const Deque &other) {
             if (this != &other) {
+                list.clear();
                 list = other.list;
             }
             return *this;
@@ -40,6 +41,7 @@ namespace my_cont {
 
         Deque &operator=(Deque &&other) noexcept {
             if (this != &other) {
+                list.clear();
                 list = other.list;
                 other.list.clear();
             }
@@ -164,7 +166,23 @@ namespace my_cont {
         }
 
         bool operator!=(const Deque &other) const {
-            return !(*this == other);
+            return list != other.list;
+        }
+
+        bool operator<(const Deque &other) const {
+            return list < other.list;
+        }
+
+        bool operator<=(const Deque &other) const {
+            return list <= other.list;
+        }
+
+        bool operator>(const Deque &other) const {
+            return list > other.list;
+        }
+
+        bool operator>=(const Deque &other) const {
+            return list >= other.list;
         }
 
         std::strong_ordering operator<=>(const Deque &other) const {
