@@ -197,11 +197,11 @@ TEST_F(ListTest, Clear) {
 }
 
 TEST_F(ListTest, Resize) {
-    listWithValues.resize(3);
+    listWithValues.resize(3, 0);
     EXPECT_EQ(listWithValues.size(), 3);
     EXPECT_EQ(listWithValues.back(), 3);
 
-    listWithValues.resize(5);
+    listWithValues.resize(5, 0);
     EXPECT_EQ(listWithValues.size(), 5);
     EXPECT_EQ(listWithValues.back(), 0);
 }

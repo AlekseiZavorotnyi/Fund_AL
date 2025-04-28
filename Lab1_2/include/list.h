@@ -329,12 +329,12 @@ namespace my_cont {
             --cap;
         }
 
-        virtual void resize(std::size_t count) {
+        virtual void resize(std::size_t count, T val) {
             while (cap > count) {
                 pop_back();
             }
             while (cap < count) {
-                push_back(T());
+                push_back(val);
             }
         }
 
