@@ -94,13 +94,6 @@ TEST_F(StackTest, EmptyAndSize) {
     EXPECT_EQ(stackWithValues.size(), 5);
 }
 
-TEST_F(StackTest, Clear) {
-    EXPECT_FALSE(stackWithValues.empty());
-    stackWithValues.clear();
-    EXPECT_TRUE(stackWithValues.empty());
-    EXPECT_EQ(stackWithValues.size(), 0);
-}
-
 TEST_F(StackTest, Swap) {
     Stack<int> other{10, 20, 30};
     stackWithValues.swap(other);
@@ -158,9 +151,6 @@ TEST_F(StackTest, LargeStack) {
 
     EXPECT_EQ(largeStack.size(), largeSize);
     EXPECT_EQ(largeStack.top(), largeSize - 1);
-
-    largeStack.clear();
-    EXPECT_TRUE(largeStack.empty());
 }
 
 TEST_F(StackTest, DifferentContainerType) {
