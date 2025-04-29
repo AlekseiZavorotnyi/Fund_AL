@@ -12,7 +12,7 @@ namespace my_cont {
     public:
         Stack() : stack() {}
 
-        Stack(std::initializer_list<T> init) : Stack() {
+        Stack(std::initializer_list<T> init) {
             for (const auto& val : init) {
                 push(val);
             }

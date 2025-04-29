@@ -1,5 +1,5 @@
-#ifndef LIST_H
-#define LIST_H
+#ifndef VECTOR_H
+#define VECTOR_H
 
 #include <cstddef>
 #include <stdexcept>
@@ -21,7 +21,7 @@ namespace my_cont {
     };
 
     template <typename T>
-    class List : public Container<T> {
+    class Vector : public Container<T> {
     private:
         class Node {
         protected:
@@ -32,7 +32,7 @@ namespace my_cont {
             explicit Node(const T& val, Node* p = nullptr, Node* n = nullptr)
                 : data(val), prev(p), next(n) {}
 
-            friend class List;
+            friend class Vector;
         };
 
         Node* head;
@@ -40,141 +40,33 @@ namespace my_cont {
         std::size_t cap;
 
     public:
-        template <typename IterType>
-        class ListIterator {
-        private:
-            friend class List;
-            Node* current;
 
-        public:
+        Vector() : head(nullptr), tail(nullptr), cap(0) {}
 
-            explicit ListIterator(Node* node = nullptr) : current(node) {}
-
-            IterType& operator*() const {
-                if (!current) throw std::out_of_range("Dereferencing null iterator");
-                return current->data;
-            }
-            IterType* operator->() const { return &current->data; }
-
-            ListIterator operator++() {
-                current = current->next;
-                return *this;
-            }
-
-            ListIterator operator++(int) {
-                ListIterator tmp = *this;
-                ++(*this);
-                return tmp;
-            }
-
-            ListIterator operator--() {
-                current = current->prev;
-                return *this;
-            }
-
-            ListIterator operator--(int) {
-                ListIterator tmp = *this;
-                --(*this);
-                return tmp;
-            }
-
-            bool operator==(const ListIterator& other) const {
-                return current == other.current;
-            }
-
-            bool operator!=(const ListIterator& other) const {
-                return !(*this == other);
-            }
-
-            ListIterator &next(std::size_t offset = 1) {
-                for (std::size_t i = 0; i < offset; i++) {
-                    if (current == nullptr) {
-                        throw std::out_of_range("ListIterator::next. Offset is out of the collection.");
-                    }
-                    current = current->next;
-                }
-                return *this;
-            }
-
-        };
-
-        template <typename IterType>
-        class ListReverseIterator {
-        private:
-            friend class List;
-            Node* current;
-        public:
-
-            explicit ListReverseIterator(Node* node = nullptr) : current(node) {}
-
-            IterType& operator*() const {
-                if (!current) throw std::out_of_range("Dereferencing null iterator");
-                return current->data;
-            }
-            IterType* operator->() const { return &current->data; }
-
-            ListReverseIterator operator++() {
-                current = current->prev;
-                return *this;
-            }
-
-            ListReverseIterator operator++(int) {
-                ListReverseIterator tmp = *this;
-                ++(*this);
-                return tmp;
-            }
-
-            ListReverseIterator operator--() {
-                current = current->next;
-                return *this;
-            }
-
-            ListReverseIterator operator--(int) {
-                ListReverseIterator tmp = *this;
-                --(*this);
-                return tmp;
-            }
-
-            bool operator==(const ListReverseIterator& other) const {
-                return current == other.current;
-            }
-
-            bool operator!=(const ListReverseIterator& other) const {
-                return !(*this == other);
-            }
-        };
-
-        using iterator = ListIterator<T>;
-        using const_iterator = ListIterator<const T>;
-        using reverse_iterator = ListReverseIterator<T>;
-        using const_reverse_iterator = ListReverseIterator<const T>;
-
-        List() : head(nullptr), tail(nullptr), cap(0) {}
-
-        List(std::initializer_list<T> init) : List() {
+        Vector(std::initializer_list<T> init) : Vector() {
             for (const auto& val : init) {
                 push_back(val);
             }
         }
 
-        List(const List& other) : List() {
+        Vector(const Vector& other) : Vector() {
             for (const auto& val : other) {
                 push_back(val);
             }
         }
 
-        List(List&& other) noexcept
+        Vector(Vector&& other) noexcept
             : head(other.head), tail(other.tail), cap(other.cap) {
             other.head = nullptr;
             other.tail = nullptr;
             other.cap = 0;
         }
 
-        ~List() override {
-            List<T>::clear();
+        ~Vector() override {
+            Vector<T>::clear();
         }
 
-        List& operator=(const List& other) {
+        Vector& operator=(const Vector& other) {
             if (this != &other) {
                 clear();
                 for (const auto& val : other) {
@@ -184,7 +76,7 @@ namespace my_cont {
             return *this;
         }
 
-        List& operator=(List&& other) noexcept {
+        Vector& operator=(Vector&& other) noexcept {
             if (this != &other) {
                 clear();
                 head = other.head;
@@ -214,12 +106,12 @@ namespace my_cont {
         [[nodiscard]] std::size_t max_size() const override { return cap; }
 
         virtual T& front() {
-            if (empty() || !head) throw std::out_of_range("List is empty");
+            if (empty() || !head) throw std::out_of_range("Vector is empty");
             return head->data;
         }
 
         virtual T& back() {
-            if (empty()) throw std::out_of_range("List is empty");
+            if (empty()) throw std::out_of_range("Vector is empty");
             return tail->data;
         }
 
@@ -291,7 +183,7 @@ namespace my_cont {
         }
 
         virtual void pop_back() {
-            if (empty()) throw std::out_of_range("List is empty");
+            if (empty()) throw std::out_of_range("Vector is empty");
 
             Node* to_delete = tail;
             tail = tail->prev;
@@ -316,7 +208,7 @@ namespace my_cont {
         }
 
         virtual void pop_front() {
-            if (empty()) throw std::out_of_range("List is empty");
+            if (empty()) throw std::out_of_range("Vector is empty");
 
             Node* to_delete = head;
             head = head->next;
@@ -338,13 +230,13 @@ namespace my_cont {
             }
         }
 
-        virtual void swap(List& other) noexcept {
+        virtual void swap(Vector& other) noexcept {
             std::swap(head, other.head);
             std::swap(tail, other.tail);
             std::swap(cap, other.cap);
         }
 
-        bool operator==(const List& other) const {
+        bool operator==(const Vector& other) const {
             if (cap != other.cap) return false;
 
             auto it1 = begin();
@@ -357,11 +249,11 @@ namespace my_cont {
             return true;
         }
 
-        bool operator!=(const List& other) const {
+        bool operator!=(const Vector& other) const {
             return !(*this == other);
         }
 
-        bool operator<(const List& other) const {
+        bool operator<(const Vector& other) const {
             auto it1 = begin();
             auto it2 = other.begin();
 
@@ -376,21 +268,21 @@ namespace my_cont {
             return size() < other.size();
         }
 
-        bool operator<=(const List& other)
+        bool operator<=(const Vector& other)
         {
             return (*this < other || *this == other);
         }
 
-        bool operator>=(const List& other)
+        bool operator>=(const Vector& other)
         {
             return !(*this < other);
         }
 
-        bool operator>(const List &other) const {
+        bool operator>(const Vector &other) const {
             return !(*this <= other);
         }
 
-        std::strong_ordering operator<=>(const List& other) const {
+        std::strong_ordering operator<=>(const Vector& other) const {
             auto it1 = begin();
             auto it2 = other.begin();
 
