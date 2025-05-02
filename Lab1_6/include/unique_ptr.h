@@ -1,5 +1,5 @@
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef UNIQUE_PTR_H
+#define UNIQUE_PTR_H
 
 #include <cstddef>
 #include <stdexcept>
