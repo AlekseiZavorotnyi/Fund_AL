@@ -7,66 +7,34 @@
 #include <initializer_list>
 #include <compare>
 
-namespace my_cont {
+namespace my_smart_ptr {
     template<typename T>
-    class Container {
-    public:
-        Container() = default;
-        Container(const Container<T>& other) = default;
-
-        virtual ~Container() = default;
-
-        [[nodiscard]] virtual bool empty() const = 0;
-        [[nodiscard]] virtual size_t size() const = 0;
-    };
-
-    template<typename T>
-    class Vector : public Container<T> {
+    class UniquePtr<T> {
     private:
-        T* data_ = nullptr;
-        size_t len = 0;
-        size_t cap = 0;
-        static constexpr size_t DEFAULT_CAPACITY = 16;
 
-        void reallocate(size_t new_capacity) {
-            T* new_data = new T[new_capacity];
-            for (size_t i = 0; i < len; ++i) {
-                new_data[i] = std::move(data_[i]);
-            }
-            delete[] data_;
-            data_ = new_data;
-            cap = new_capacity;
-        }
 
     public:
-        Vector() = default;
+        UniquePtr() = default;
 
-        Vector(std::initializer_list<T> init) {
-            reserve(init.size());
-            for (const auto& item : init) {
-                push_back(item);
-            }
-        }
-
-        Vector(const Vector& other) {
+        UniquePtr(const UniquePtr& other) {
             reserve(other.len);
             for (size_t i = 0; i < other.len; ++i) {
                 push_back(other.data_[i]);
             }
         }
 
-        Vector(Vector&& other) noexcept
+        UniquePtr(UniquePtr&& other) noexcept
             : data_(other.data_), len(other.len), cap(other.cap) {
             other.data_ = nullptr;
             other.len = 0;
             other.cap = 0;
         }
 
-        ~Vector() override {
+        ~UniquePtr()  {
             delete[] data_;
         }
 
-        Vector& operator=(const Vector& other) {
+        UniquePtr& operator=(const UniquePtr& other) {
             if (this != &other) {
                 clear();
                 reserve(other.len);
@@ -77,7 +45,7 @@ namespace my_cont {
             return *this;
         }
 
-        Vector& operator=(Vector&& other) noexcept {
+        UniquePtr& operator=(UniquePtr&& other) noexcept {
             if (this != &other) {
                 delete[] data_;
                 data_ = other.data_;
@@ -96,18 +64,18 @@ namespace my_cont {
 
         T& at(size_t pos) {
             if (pos >= len) {
-                throw std::out_of_range("Vector::at - index out of range");
+                throw std::out_of_range("UniquePtr::at - index out of range");
             }
             return data_[pos];
         }
 
         T& front() {
-            if (empty()) throw std::out_of_range("Vector::front - empty vector");
+            if (empty()) throw std::out_of_range("UniquePtr::front - empty vector");
             return data_[0];
         }
 
         T& back() {
-            if (empty()) throw std::out_of_range("Vector::back - empty vector");
+            if (empty()) throw std::out_of_range("UniquePtr::back - empty vector");
             return data_[len - 1];
         }
 
@@ -115,11 +83,11 @@ namespace my_cont {
             return data_;
         }
 
-        [[nodiscard]] bool empty() const override {
+        [[nodiscard]] bool empty() const  {
             return len == 0;
         }
 
-        [[nodiscard]] size_t size() const override {
+        [[nodiscard]] size_t size() const  {
             return len;
         }
 
@@ -157,7 +125,7 @@ namespace my_cont {
         }
 
         void pop_back() {
-            if (empty()) throw std::out_of_range("Vector::pop_back - empty vector");
+            if (empty()) throw std::out_of_range("UniquePtr::pop_back - empty vector");
             --len;
         }
 
@@ -190,13 +158,13 @@ namespace my_cont {
             }
         }
 
-        void swap(Vector& other) noexcept {
+        void swap(UniquePtr& other) noexcept {
             std::swap(data_, other.data_);
             std::swap(len, other.len);
             std::swap(cap, other.cap);
         }
 
-        bool operator==(const Vector& other) const {
+        bool operator==(const UniquePtr& other) const {
             if (len != other.len) return false;
             for (size_t i = 0; i < len; ++i) {
                 if (data_[i] != other.data_[i]) {
@@ -206,11 +174,11 @@ namespace my_cont {
             return true;
         }
 
-        bool operator!=(const Vector& other) const {
+        bool operator!=(const UniquePtr& other) const {
             return !(*this == other);
         }
 
-        bool operator<(const Vector& other) const {
+        bool operator<(const UniquePtr& other) const {
             size_t min_size = std::min(len, other.len);
             for (size_t i = 0; i < min_size; ++i) {
                 if (data_[i] < other.data_[i]) return true;
@@ -219,19 +187,19 @@ namespace my_cont {
             return len < other.len;
         }
 
-        bool operator<=(const Vector& other) const {
+        bool operator<=(const UniquePtr& other) const {
             return !(other < *this);
         }
 
-        bool operator>(const Vector& other) const {
+        bool operator>(const UniquePtr& other) const {
             return other < *this;
         }
 
-        bool operator>=(const Vector& other) const {
+        bool operator>=(const UniquePtr& other) const {
             return !(*this < other);
         }
 
-        std::strong_ordering operator<=>(const Vector& other) const {
+        std::strong_ordering operator<=>(const UniquePtr& other) const {
             size_t min_size = std::min(len, other.len);
             for (size_t i = 0; i < min_size; ++i) {
                 if (auto cmp = data_[i] <=> other.data_[i]; cmp != 0) {
@@ -244,4 +212,4 @@ namespace my_cont {
 
 }
 
-#endif // VECTOR_H
+#endif
