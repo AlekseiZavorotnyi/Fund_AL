@@ -198,14 +198,14 @@ BigInt BigInt::abs() const {
 }
 
 BigInt BigInt::operator+(const BigInt& other) const {
-    BigInt temp = BigInt();
-    temp.isNegative = isNegative;
+    BigInt res = BigInt();
+    res.isNegative = isNegative;
     BigInt abs_cur = this->abs(), abs_other = other.abs();
     if (isNegative && !other.isNegative && abs_cur < abs_other) {
-        temp.isNegative = false;
+        res.isNegative = false;
     }
     if (!isNegative && other.isNegative && abs_cur < abs_other) {
-        temp.isNegative = true;
+        res.isNegative = true;
     }
     if (isNegative == other.isNegative) {
         ull sum = 0;
@@ -221,18 +221,18 @@ BigInt BigInt::operator+(const BigInt& other) const {
             else {
                 sum += digits[i] + other.digits[i];
             }
-            temp.digits.push_back(sum % BASE);
+            res.digits.push_back(sum % BASE);
             sum /= BASE;
         }
         if (sum > 0) {
-            temp.digits.push_back(sum % BASE);
+            res.digits.push_back(sum % BASE);
         }
     }
     else {
         if (abs_cur > abs_other) {
             ull diff = 0;
-            ull max_size = std::max(digits.size(), other.digits.size());
-            ull min_size = std::min(digits.size(), other.digits.size());
+            ull max_size = digits.size();
+            ull min_size = other.digits.size();
             int in_mind = 0;
             for (size_t i = 0; i < min_size; i++) {
                 if ((digits[i] - in_mind) >= other.digits[i]) {
@@ -243,17 +243,21 @@ BigInt BigInt::operator+(const BigInt& other) const {
                     diff = digits[i] - in_mind + BASE - other.digits[i];
                     in_mind = 1;
                 }
-                temp.digits.push_back(diff);
+                res.digits.push_back(diff);
+                diff = 0;
             }
             for (size_t i = min_size; i < max_size; i++) {
-                temp.digits.push_back(diff - in_mind);
-                in_mind = 0;
+                if (!(i == max_size - 1 && (digits[i] - in_mind) == 0)) {
+                    res.digits.push_back(digits[i] - in_mind);
+                    in_mind = 0;
+                }
+
             }
         }
         else {
             ull diff = 0;
-            ull max_size = std::max(digits.size(), other.digits.size());
-            ull min_size = std::min(digits.size(), other.digits.size());
+            ull max_size = other.digits.size();
+            ull min_size = digits.size();
             int in_mind = 0;
             for (size_t i = 0; i < min_size; i++) {
                 if ((other.digits[i] - in_mind) >= digits[i]) {
@@ -264,13 +268,119 @@ BigInt BigInt::operator+(const BigInt& other) const {
                     diff = other.digits[i] - in_mind + BASE - digits[i];
                     in_mind = 1;
                 }
-                temp.digits.push_back(diff);
+                res.digits.push_back(diff);
             }
             for (size_t i = min_size; i < max_size; i++) {
-                temp.digits.push_back(diff - in_mind);
-                in_mind = 0;
+                if (!(i == max_size - 1 && (other.digits[i] - in_mind) == 0)) {
+                    res.digits.push_back(other.digits[i] - in_mind);
+                    in_mind = 0;
+                }
+
             }
         }
     }
-    return temp;
+    return res;
+}
+
+BigInt BigInt::operator-(const BigInt& other) const {
+    BigInt res = other;
+    res.isNegative = !isNegative;
+    return *this + res;
+}
+
+/*BigInt BigInt::operator*(const BigInt& other) const{
+    BigInt res = BigInt();
+    res.isNegative = isNegative;
+    BigInt abs_cur = this->abs(), abs_other = other.abs();
+    ll max_size = std::max(digits.size(), other.digits.size());
+    ll min_size = std::min(digits.size(), other.digits.size());
+    ull in_mind = 0;
+    if (abs_cur > abs_other) {
+        for(ll i = 0; i < min_size + max_size - 1; i++) {
+            ull sum = 0;
+            ll start_j = 0, end_j = min_size;;
+            if (i < min_size - 1) {
+                end_j = i + 1;
+            }
+            if (i > max_size - 1) {
+                end_j = min_size + max_size - 1 - i;
+                start_j = i - max_size + 1;
+            }
+            for(ll j = start_j; j < start_j + end_j; j++) {
+                ll iter1 = i > max_size - 1 ? max_size - 1 : i;
+                ll iter2_k1 = j - start_j;
+                ll iter2_k2 = j;
+                ll k1 = (iter1 - iter2_k1) > 0 ? (iter1 - iter2_k1) : 0;
+                ll k2 = (iter1 - min_size) > 0 ? (iter1 - min_size + iter2_k2) : iter2_k2;
+                sum += digits[k1] * other.digits[k2];
+            }
+            sum += in_mind;
+            res.digits.push_back(sum % BASE);
+            in_mind = sum / BASE;
+        }
+        if (in_mind != 0) {
+            res.digits.push_back(in_mind % BASE);
+        }
+    }
+    else {
+        for(ll i = 0; i < min_size + max_size - 1; i++) {
+            ull sum = 0;
+            ll start_j = 0, end_j = min_size;;
+            if (i < min_size - 1) {
+                end_j = i + 1;
+            }
+            if (i > max_size - 1) {
+                end_j = min_size + max_size - 1 - i;
+                start_j = i - max_size + 1;
+            }
+            for(ll j = start_j; j < start_j + end_j; j++) {
+                ll iter1 = i > max_size - 1 ? max_size - 1 : i;
+                ll iter2_k1 = j - start_j;
+                ll iter2_k2 = j;
+                ll k1 = (iter1 - iter2_k1) > 0 ? (iter1 - iter2_k1) : 0;
+                ll k2 = (iter1 - min_size) > 0 ? (iter1 - min_size + iter2_k2) : iter2_k2;
+                sum += digits[k2] * other.digits[k1];
+            }
+            sum += in_mind;
+            res.digits.push_back(sum % BASE);
+            in_mind = sum / BASE;
+        }
+        if (in_mind != 0) {
+            res.digits.push_back(in_mind % BASE);
+        }
+    }
+    return res;
+}*/
+
+BigInt BigInt::operator*(const BigInt& other) const {
+    BigInt result;
+    result.digits.resize(digits.size() + other.digits.size(), 0);
+
+    // Умножение в столбик
+    for (size_t i = 0; i < digits.size(); ++i) {
+        unsigned long long carry = 0;
+        for (size_t j = 0; j < other.digits.size() || carry; ++j) {
+            unsigned long long product = result.digits[i + j] + carry;
+            if (j < other.digits.size()) {
+                product += digits[i] * other.digits[j];
+            }
+            result.digits[i + j] = product % BASE;
+            carry = product / BASE;
+        }
+    }
+
+    // Установка правильного знака
+    result.isNegative = isNegative != other.isNegative;
+
+    // Удаление ведущих нулей
+    while (result.digits.size() > 1 && result.digits.back() == 0) {
+        result.digits.pop_back();
+    }
+
+    // Ноль всегда положительный
+    if (result.digits.size() == 1 && result.digits[0] == 0) {
+        result.isNegative = false;
+    }
+
+    return result;
 }
