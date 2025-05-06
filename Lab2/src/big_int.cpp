@@ -95,6 +95,13 @@ std::ostream &operator<<(std::ostream &os, const BigInt &num) {
     return os;
 }
 
+std::istream& operator>>(std::istream& is, BigInt& num) {
+    std::string input;
+    is >> input;
+    num = BigInt(input);
+    return is;
+}
+
 BigInt& BigInt::operator=(const BigInt& other) {
     isNegative = other.isNegative;
     digits = std::vector<unsigned long long>(other.digits);
@@ -185,7 +192,6 @@ bool BigInt::operator>=(const BigInt &other) const {
 }
 
 void BigInt::remove_leading_zeros() {
-    std::cout << digits.back() << std::endl << digits.size() << std::endl;
     while (digits.back() == 0 && digits.size() > 1) {
         digits.pop_back();
     }
@@ -288,99 +294,99 @@ BigInt BigInt::operator-(const BigInt& other) const {
     return *this + res;
 }
 
-/*BigInt BigInt::operator*(const BigInt& other) const{
-    BigInt res = BigInt();
-    res.isNegative = isNegative;
-    BigInt abs_cur = this->abs(), abs_other = other.abs();
-    ll max_size = std::max(digits.size(), other.digits.size());
-    ll min_size = std::min(digits.size(), other.digits.size());
-    ull in_mind = 0;
-    if (abs_cur > abs_other) {
-        for(ll i = 0; i < min_size + max_size - 1; i++) {
-            ull sum = 0;
-            ll start_j = 0, end_j = min_size;;
-            if (i < min_size - 1) {
-                end_j = i + 1;
-            }
-            if (i > max_size - 1) {
-                end_j = min_size + max_size - 1 - i;
-                start_j = i - max_size + 1;
-            }
-            for(ll j = start_j; j < start_j + end_j; j++) {
-                ll iter1 = i > max_size - 1 ? max_size - 1 : i;
-                ll iter2_k1 = j - start_j;
-                ll iter2_k2 = j;
-                ll k1 = (iter1 - iter2_k1) > 0 ? (iter1 - iter2_k1) : 0;
-                ll k2 = (iter1 - min_size) > 0 ? (iter1 - min_size + iter2_k2) : iter2_k2;
-                sum += digits[k1] * other.digits[k2];
-            }
-            sum += in_mind;
-            res.digits.push_back(sum % BASE);
-            in_mind = sum / BASE;
-        }
-        if (in_mind != 0) {
-            res.digits.push_back(in_mind % BASE);
-        }
-    }
-    else {
-        for(ll i = 0; i < min_size + max_size - 1; i++) {
-            ull sum = 0;
-            ll start_j = 0, end_j = min_size;;
-            if (i < min_size - 1) {
-                end_j = i + 1;
-            }
-            if (i > max_size - 1) {
-                end_j = min_size + max_size - 1 - i;
-                start_j = i - max_size + 1;
-            }
-            for(ll j = start_j; j < start_j + end_j; j++) {
-                ll iter1 = i > max_size - 1 ? max_size - 1 : i;
-                ll iter2_k1 = j - start_j;
-                ll iter2_k2 = j;
-                ll k1 = (iter1 - iter2_k1) > 0 ? (iter1 - iter2_k1) : 0;
-                ll k2 = (iter1 - min_size) > 0 ? (iter1 - min_size + iter2_k2) : iter2_k2;
-                sum += digits[k2] * other.digits[k1];
-            }
-            sum += in_mind;
-            res.digits.push_back(sum % BASE);
-            in_mind = sum / BASE;
-        }
-        if (in_mind != 0) {
-            res.digits.push_back(in_mind % BASE);
-        }
-    }
-    return res;
-}*/
-
 BigInt BigInt::operator*(const BigInt& other) const {
-    BigInt result;
-    result.digits.resize(digits.size() + other.digits.size(), 0);
-
-    // Умножение в столбик
+    BigInt res;
+    res.isNegative = (isNegative != other.isNegative);
+    res.digits.resize(digits.size() + other.digits.size(), 0);
+    
     for (size_t i = 0; i < digits.size(); ++i) {
-        unsigned long long carry = 0;
+        ull carry = 0;
         for (size_t j = 0; j < other.digits.size() || carry; ++j) {
-            unsigned long long product = result.digits[i + j] + carry;
+            ull product = res.digits[i + j] + carry;
             if (j < other.digits.size()) {
                 product += digits[i] * other.digits[j];
             }
-            result.digits[i + j] = product % BASE;
+            res.digits[i + j] = product % BASE;
             carry = product / BASE;
         }
     }
-
-    // Установка правильного знака
-    result.isNegative = isNegative != other.isNegative;
-
-    // Удаление ведущих нулей
-    while (result.digits.size() > 1 && result.digits.back() == 0) {
-        result.digits.pop_back();
+    res.remove_leading_zeros();
+    if (res.digits.size() == 1 && res.digits[0] == 0) {
+        res.isNegative = false;
     }
-
-    // Ноль всегда положительный
-    if (result.digits.size() == 1 && result.digits[0] == 0) {
-        result.isNegative = false;
-    }
-
-    return result;
+    return res;
 }
+
+BigInt BigInt::operator/(const BigInt& other) const {
+    if (other == BigInt(0) || other == BigInt("0")) {
+        throw std::invalid_argument("Division by zero");
+    }
+
+    BigInt dividend = this->abs();
+    BigInt divisor = other.abs();
+
+    BigInt res;
+    BigInt current;
+
+    // Деление начинаем со старших разрядов
+    for (int i = dividend.digits.size() - 1; i >= 0; --i) {
+        current.digits.insert(current.digits.begin(), dividend.digits[i]);
+        current.remove_leading_zeros();
+
+        ll l = 0, r = BASE;
+        ll count = 0;
+
+        while (l <= r) {
+            ll mid = (l + r) / 2;
+            BigInt product = divisor * BigInt(mid);
+
+            if (product <= current) {
+                count = mid;
+                l = mid + 1;
+            } else {
+                r = mid - 1;
+            }
+        }
+
+        res.digits.insert(res.digits.begin(), count);
+        current = current - divisor * BigInt(count);
+    }
+
+    res.remove_leading_zeros();
+
+    res.isNegative = (this->isNegative != other.isNegative);
+
+    if (res.digits.empty() || (res.digits.size() == 1 && res.digits[0] == 0)) {
+        res.isNegative = false;
+    }
+
+    return res;
+}
+
+BigInt BigInt::operator+=(const BigInt& other) {
+    *this = *this + other;
+    return *this;
+}
+
+BigInt BigInt::operator-=(const BigInt& other) {
+    *this = *this - other;
+    return *this;
+}
+
+BigInt BigInt::operator*=(const BigInt& other) {
+    *this = *this * other;
+    return *this;
+}
+BigInt BigInt::operator/=(const BigInt& other) {
+    *this = *this / other;
+    return *this;
+}
+BigInt BigInt::operator++() {
+    *this += BigInt(1);
+    return *this;
+}
+BigInt BigInt::operator--() {
+    *this -= BigInt(1);
+    return *this;
+}
+
