@@ -42,7 +42,7 @@ namespace my_smart_ptr {
             return *this;
         }
 
-        T* get() const noexcept {
+        T* get() const {
             return ptr_;
         }
 
@@ -50,22 +50,22 @@ namespace my_smart_ptr {
             return *ptr_;
         }
 
-        T* operator->() const noexcept {
+        T* operator->() const {
             return ptr_;
         }
 
-        explicit operator bool() const noexcept {
+        explicit operator bool() const {
             return ptr_ != nullptr;
         }
 
-        void reset(T* ptr = nullptr) noexcept {
+        void reset(T* ptr = nullptr) {
             if (ptr_ != nullptr) {
                 deleter_(ptr_);
             }
             ptr_ = ptr;
         }
 
-        T* release() noexcept {
+        T* release() {
             T *tmp = ptr_;
             ptr_ = nullptr;
             return tmp;

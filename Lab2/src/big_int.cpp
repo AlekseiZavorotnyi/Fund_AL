@@ -287,6 +287,7 @@ BigInt BigInt::operator+(const BigInt& other) const {
             }
         }
     }
+    res.remove_leading_zeros();
     return res;
 }
 
@@ -320,47 +321,49 @@ BigInt BigInt::operator*(const BigInt& other) const {
 }
 
 BigInt BigInt::operator/(const BigInt& other) const {
-    if (other == BigInt(0) || other == BigInt("0")) {
-        throw std::invalid_argument("Division by zero");
+    if (other == BigInt(0)) {
+        throw std::invalid_argument("Divide by 0");
     }
-
-    BigInt dividend = this->abs();
-    BigInt divisor = other.abs();
+    int ind = 0;
 
     BigInt res;
-    BigInt current;
-
-    for (int i = dividend.digits.size() - 1; i >= 0; --i) {
-        current.digits.insert(current.digits.begin(), dividend.digits[i]);
-        current.remove_leading_zeros();
-
-        ll l = 0, r = BASE;
-        ll count = 0;
-
-        while (l <= r) {
-            ll mid = (l + r) / 2;
-            BigInt product = divisor * BigInt(mid);
-
-            if (product <= current) {
-                count = mid;
-                l = mid + 1;
-            } else {
-                r = mid - 1;
+    if (*this == res) {
+        return res;
+    }
+    res.digits.pop_back();
+    BigInt tmp;
+    tmp.digits.pop_back();
+    res.isNegative = (isNegative != other.isNegative);
+    BigInt other_abs = other.abs();
+    while (ind != static_cast<int>(digits.size())) {
+        tmp.digits.push_back(digits[ind]);
+        if (tmp >= other_abs) {
+            ll l = 0;
+            ll r = BASE;
+            while (l + 1 < r) {
+                const ll m = (l + r) / 2;
+                BigInt mult = (other_abs * BigInt(m));
+                if (tmp >= mult) {
+                    l = m;
+                } else {
+                    r = m;
+                }
+            }
+            res.digits.push_back(l);
+            tmp -= other_abs * BigInt(l);
+            if (tmp == BigInt(0)) {
+                tmp.digits.pop_back();
+            }
+        } else {
+            if (!res.digits.empty()) {
+                res.digits.push_back(0);
             }
         }
-
-        res.digits.insert(res.digits.begin(), count);
-        current = current - divisor * BigInt(count);
+        ++ind;
     }
-
-    res.remove_leading_zeros();
-
-    res.isNegative = (this->isNegative != other.isNegative);
-
-    if (res.digits.empty() || (res.digits.size() == 1 && res.digits[0] == 0)) {
-        res.isNegative = false;
+    if (res.digits.empty()) {
+        res.digits.push_back(0);
     }
-
     return res;
 }
 

@@ -119,7 +119,7 @@ TEST(Operators, CompoundAssignmentOperators) {
     BigInt num3("-123456789");
 
     num1 += num2;
-    EXPECT_EQ(num1, BigInt("1111111110"));
+    EXPECT_EQ(BigInt("1111111110"), num1);
 
     num1 -= num2;
     EXPECT_EQ(num1, BigInt("123456789"));
@@ -128,6 +128,7 @@ TEST(Operators, CompoundAssignmentOperators) {
     EXPECT_EQ(num1, BigInt("121932631112635269"));
 
     num1 /= num2;
+    std::cout << num1 << std::endl;
     EXPECT_EQ(num1, BigInt("123456789"));
 
     num3 += BigInt("123456789");
