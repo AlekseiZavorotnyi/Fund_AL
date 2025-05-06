@@ -1,246 +1,222 @@
-#include "big_int.h"
 #include <gtest/gtest.h>
-#include <memory>
-#include <utility>
+#include "big_int.h"
 
-class TestObject {
-private:
-    int value;
 
-public:
-    TestObject() : value(0) { ++count; }
-    explicit TestObject(int v) : value(v) { ++count; }
-    ~TestObject() { --count; }
 
-    int getValue() const { return value; }
-    void setValue(int v) { value = v; }
-
-    static int count;
-};
-
-int TestObject::count = 0;
-
-struct TestDeleter {
-    void operator()(TestObject *p) {
-        delete p;
-        deleted = true;
-    }
-
-    static bool deleted;
-};
-
-bool TestDeleter::deleted = false;
-
-struct ArrayTestDeleter {
-    void operator()(int *p) {
-        delete[] p;
-        deleted = true;
-    }
-
-    static bool deleted;
-};
-
-bool ArrayTestDeleter::deleted = false;
-
-class UniquePtrTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        TestObject::count = 0;
-        TestDeleter::deleted = false;
-        ArrayTestDeleter::deleted = false;
-    }
-
-    void TearDown() override {
-        ASSERT_EQ(TestObject::count, 0);
-    }
-};
-
-TEST_F(UniquePtrTest, DefaultConstructor) {
-    my_smart_ptr::UniquePtr<TestObject> ptr;
-    EXPECT_EQ(ptr.get(), nullptr);
-    EXPECT_FALSE(static_cast<bool>(ptr));
+// Constructor tests
+TEST(Constructor, DefaultConstructor) {
+    const BigInt num;
+    EXPECT_EQ(num, BigInt(0));
 }
 
-TEST_F(UniquePtrTest, PointerConstructor) { {
-        TestObject *raw = new TestObject(42);
-        my_smart_ptr::UniquePtr<TestObject> ptr(raw);
-        EXPECT_EQ(ptr.get(), raw);
-        EXPECT_EQ(ptr->getValue(), 42);
-        EXPECT_EQ((*ptr).getValue(), 42);
-        EXPECT_TRUE(static_cast<bool>(ptr));
-    }
-    EXPECT_EQ(TestObject::count, 0);
+TEST(Constructor, LongLongConstructor) {
+    BigInt num1(123456789);
+    BigInt num2(-987654321);
+    BigInt num3(0);
+
+    EXPECT_EQ(num1, BigInt("123456789"));
+    EXPECT_EQ(num2, BigInt("-987654321"));
+    EXPECT_EQ(num3, BigInt("0"));
 }
 
-TEST_F(UniquePtrTest, MoveConstructor) {
-    TestObject *raw = new TestObject(42);
-    my_smart_ptr::UniquePtr<TestObject> ptr1(raw);
-    my_smart_ptr::UniquePtr<TestObject> ptr2(std::move(ptr1));
+TEST(Constructor, StringConstructor) {
+    BigInt num1("123456789012345678");
+    BigInt num2("-987654321098765430");
+    BigInt num3("0");
 
-    EXPECT_EQ(ptr1.get(), nullptr);
-    EXPECT_EQ(ptr2.get(), raw);
-    EXPECT_FALSE(static_cast<bool>(ptr1));
-    EXPECT_TRUE(static_cast<bool>(ptr2));
+    EXPECT_EQ(num1, BigInt(123456789012345678));
+    EXPECT_EQ(num2, BigInt(-98765432109876543) * BigInt(10));
+    EXPECT_EQ(num3, BigInt(0));
+
+    EXPECT_THROW(BigInt("abc123"), std::invalid_argument);
+    EXPECT_THROW(BigInt("12a34"), std::invalid_argument);
 }
 
-TEST_F(UniquePtrTest, CustomDeleter) { {
-        TestObject *raw = new TestObject(42);
-        my_smart_ptr::UniquePtr<TestObject, TestDeleter> ptr(raw);
-        EXPECT_FALSE(TestDeleter::deleted);
-    }
-    EXPECT_TRUE(TestDeleter::deleted);
+TEST(Constructor, CopyMoveConstructors) {
+    BigInt num1("123456789");
+    BigInt num2(num1);
+    BigInt num3("987654321");
+    BigInt num4(std::move(num3));
+
+    EXPECT_EQ(num1, num2);
+    EXPECT_EQ(num4, BigInt("987654321"));
 }
 
-TEST_F(UniquePtrTest, MoveAssignment) {
-    TestObject *raw1 = new TestObject(42);
-    TestObject *raw2 = new TestObject(24);
+// Assignment operators
+TEST(Operators, AssignmentOperators) {
+    BigInt num1("123456789");
+    BigInt num2;
+    num2 = num1;
+    EXPECT_EQ(num1, num2);
 
-    my_smart_ptr::UniquePtr<TestObject> ptr1(raw1);
-    my_smart_ptr::UniquePtr<TestObject> ptr2(raw2);
-
-    ptr2 = std::move(ptr1);
-
-    EXPECT_EQ(ptr1.get(), nullptr);
-    EXPECT_EQ(ptr2.get(), raw1);
-    EXPECT_EQ(TestObject::count, 1);
+    BigInt num3;
+    num3 = std::move(BigInt("987654321"));
+    EXPECT_EQ(num3, BigInt("987654321"));
 }
 
-TEST_F(UniquePtrTest, Reset) {
-    TestObject *raw1 = new TestObject(42);
-    TestObject *raw2 = new TestObject(24);
+// Arithmetic operations
+TEST(Operators, Addition) {
+    BigInt num1("123456789");
+    BigInt num2("987654321");
+    BigInt num3("-123456789");
+    BigInt num4("-987654321");
+    BigInt zero(0);
 
-    my_smart_ptr::UniquePtr<TestObject> ptr(raw1);
-    ptr.reset(raw2);
-
-    EXPECT_EQ(ptr.get(), raw2);
-    EXPECT_EQ(TestObject::count, 1);
-
-    ptr.reset();
-    EXPECT_EQ(ptr.get(), nullptr);
-    EXPECT_EQ(TestObject::count, 0);
+    EXPECT_EQ(num1 + num2, BigInt("1111111110"));
+    EXPECT_EQ(num1 + num3, zero);
+    EXPECT_EQ(num3 + num4, BigInt("-1111111110"));
+    EXPECT_EQ(num1 + zero, num1);
+    EXPECT_EQ(num4 + num1, BigInt("-864197532"));
 }
 
-TEST_F(UniquePtrTest, ResetWithCustomDeleter) {
-    TestObject *raw = new TestObject(42);
-    my_smart_ptr::UniquePtr<TestObject, TestDeleter> ptr(raw);
+TEST(Operators, Subtraction) {
+    BigInt num1("123456789");
+    BigInt num2("987654321");
+    BigInt num3("-123456789");
+    BigInt num4("-987654321");
+    BigInt zero(0);
 
-    ptr.reset();
-    EXPECT_TRUE(TestDeleter::deleted);
-    EXPECT_EQ(ptr.get(), nullptr);
+    EXPECT_EQ(num2 - num1, BigInt("864197532"));
+    EXPECT_EQ(num1 - num1, zero);
+    EXPECT_EQ(num3 - num4, BigInt("864197532"));
+    EXPECT_EQ(num4 - num3, BigInt("-864197532"));
+    EXPECT_EQ(zero - num1, BigInt("-123456789"));
 }
 
-TEST_F(UniquePtrTest, Release) {
-    TestObject *raw = new TestObject(42);
-    my_smart_ptr::UniquePtr<TestObject> ptr(raw);
+TEST(Operators, Multiplication) {
+    BigInt num1("123456789");
+    BigInt num2("987654321");
+    BigInt num3("-123456789");
+    BigInt num4("-987654321");
+    BigInt zero(0);
 
-    TestObject *released = ptr.release();
-
-    EXPECT_EQ(released, raw);
-    EXPECT_EQ(ptr.get(), nullptr);
-    EXPECT_EQ(TestObject::count, 1);
-
-    delete released;
+    EXPECT_EQ(num1 * num2, BigInt("121932631112635269"));
+    EXPECT_EQ(num1 * num3, BigInt("-15241578750190521"));
+    EXPECT_EQ(num3 * num4, BigInt("121932631112635269"));
+    EXPECT_EQ(num1 * zero, zero);
+    EXPECT_EQ(zero * num4, zero);
 }
 
-TEST_F(UniquePtrTest, Swap) {
-    TestObject *raw1 = new TestObject(42);
-    TestObject *raw2 = new TestObject(24);
+TEST(Operators, Division) {
+    BigInt num1("123456789");
+    BigInt num2("987654321");
+    BigInt num3("-123456789");
+    BigInt num4("-987654321");
+    BigInt zero(0);
+    BigInt one(1);
 
-    my_smart_ptr::UniquePtr<TestObject> ptr1(raw1);
-    my_smart_ptr::UniquePtr<TestObject> ptr2(raw2);
-
-    ptr1.swap(ptr2);
-
-    EXPECT_EQ(ptr1.get(), raw2);
-    EXPECT_EQ(ptr2.get(), raw1);
-    EXPECT_EQ(TestObject::count, 2);
+    EXPECT_EQ(num2 / num1, BigInt("8"));
+    EXPECT_EQ(num1 / num2, zero);
+    EXPECT_EQ(num4 / num3, BigInt("8"));
+    EXPECT_EQ(num3 / num1, BigInt("-1"));
+    EXPECT_EQ(num1 / one, num1);
+    EXPECT_THROW(num1 / zero, std::invalid_argument);
 }
 
-TEST_F(UniquePtrTest, ArrayDefaultConstructor) {
-    my_smart_ptr::UniquePtr<int[]> ptr;
-    EXPECT_EQ(ptr.get(), nullptr);
-    EXPECT_FALSE(static_cast<bool>(ptr));
+TEST(Operators, CompoundAssignmentOperators) {
+    BigInt num1("123456789");
+    BigInt num2("987654321");
+    BigInt num3("-123456789");
+
+    num1 += num2;
+    EXPECT_EQ(num1, BigInt("1111111110"));
+
+    num1 -= num2;
+    EXPECT_EQ(num1, BigInt("123456789"));
+
+    num1 *= num2;
+    EXPECT_EQ(num1, BigInt("121932631112635269"));
+
+    num1 /= num2;
+    EXPECT_EQ(num1, BigInt("123456789"));
+
+    num3 += BigInt("123456789");
+    EXPECT_EQ(num3, BigInt(0));
 }
 
-TEST_F(UniquePtrTest, ArrayPointerConstructor) {
-    int *raw = new int[3]{1, 2, 3};
-    my_smart_ptr::UniquePtr<int[]> ptr(raw);
+// Comparison operators
+TEST(Operators, ComparisonOperators) {
+    BigInt num1("123456789");
+    BigInt num2("987654321");
+    BigInt num3("-123456789");
+    BigInt num4("-987654321");
+    BigInt num5("123456789");
 
-    EXPECT_EQ(ptr.get(), raw);
-    EXPECT_EQ(ptr[0], 1);
-    EXPECT_EQ(ptr[1], 2);
-    EXPECT_EQ(ptr[2], 3);
-    EXPECT_TRUE(static_cast<bool>(ptr));
+    EXPECT_TRUE(num1 < num2);
+    EXPECT_TRUE(num4 < num3);
+    EXPECT_TRUE(num1 <= num5);
+    EXPECT_TRUE(num1 == num5);
+    EXPECT_TRUE(num1 != num2);
+    EXPECT_TRUE(num2 > num1);
+    EXPECT_TRUE(num3 > num4);
+    EXPECT_TRUE(num5 >= num1);
+    EXPECT_TRUE(num3 <= num1);
 }
 
-TEST_F(UniquePtrTest, ArrayMoveConstructor) {
-    int *raw = new int[3]{1, 2, 3};
-    my_smart_ptr::UniquePtr<int[]> ptr1(raw);
-    my_smart_ptr::UniquePtr<int[]> ptr2(std::move(ptr1));
+// I/O operations
+TEST(Operators, StreamOperations) {
+    std::stringstream ss1, ss2, ss3;
+    BigInt num1("123456789");
+    BigInt num2("-987654321");
+    BigInt num3;
 
-    EXPECT_EQ(ptr1.get(), nullptr);
-    EXPECT_EQ(ptr2.get(), raw);
-    EXPECT_FALSE(static_cast<bool>(ptr1));
-    EXPECT_TRUE(static_cast<bool>(ptr2));
+    ss1 << num1;
+    EXPECT_EQ(ss1.str(), "123456789");
+
+    ss2 << num2;
+    EXPECT_EQ(ss2.str(), "-987654321");
+
+    ss3 << "123456789";
+    ss3 >> num3;
+    EXPECT_EQ(num3, num1);
+
+    ss3.clear();
+    ss3 << "-987654321";
+    ss3 >> num3;
+    EXPECT_EQ(num3, num2);
+
+    ss3.clear();
+    ss3 << "invalid";
+    EXPECT_THROW(ss3 >> num3, std::invalid_argument);
 }
 
-TEST_F(UniquePtrTest, ArrayCustomDeleter) {
-    int *raw = new int[3]{1, 2, 3}; {
-        my_smart_ptr::UniquePtr<int[], ArrayTestDeleter> ptr(raw);
-        EXPECT_FALSE(ArrayTestDeleter::deleted);
-    }
-    EXPECT_TRUE(ArrayTestDeleter::deleted);
+TEST(Func, AbsFunction) {
+    BigInt num1("123456789");
+    BigInt num2("-987654321");
+
+    EXPECT_EQ(num1.abs(), num1);
+    EXPECT_EQ(num2.abs(), BigInt("987654321"));
+    EXPECT_EQ(BigInt(0).abs(), BigInt(0));
 }
 
-TEST_F(UniquePtrTest, ArrayMoveAssignment) {
-    int *raw1 = new int[3]{1, 2, 3};
-    int *raw2 = new int[2]{4, 5};
+TEST(StressTest, EdgeCases) {
+    BigInt max_ll(std::to_string(LLONG_MAX));
+    BigInt min_ll(std::to_string(LLONG_MIN));
+    BigInt beyond_ll("9223372036854775808"); // LL_MAX + 1
 
-    my_smart_ptr::UniquePtr<int[]> ptr1(raw1);
-    my_smart_ptr::UniquePtr<int[]> ptr2(raw2);
+    EXPECT_GT(beyond_ll, max_ll);
+    EXPECT_LT(min_ll, max_ll);
 
-    ptr2 = std::move(ptr1);
+    BigInt zero(0);
+    BigInt num("123456789");
 
-    EXPECT_EQ(ptr1.get(), nullptr);
-    EXPECT_EQ(ptr2.get(), raw1);
+    EXPECT_EQ(num + zero, num);
+    EXPECT_EQ(num - zero, num);
+    EXPECT_EQ(num * zero, zero);
+
+    BigInt one(1);
+    EXPECT_EQ(num * one, num);
+    EXPECT_EQ(num / one, num);
 }
 
-TEST_F(UniquePtrTest, ArrayReset) {
-    int *raw1 = new int[3]{1, 2, 3};
-    int *raw2 = new int[2]{4, 5};
+TEST(StressTest, Performance) {
+    BigInt a("123456789012345678901234567890");
+    BigInt b("987654321098765432109876543210");
 
-    my_smart_ptr::UniquePtr<int[]> ptr(raw1);
-    ptr.reset(raw2);
-
-    EXPECT_EQ(ptr.get(), raw2);
-
-    ptr.reset();
-    EXPECT_EQ(ptr.get(), nullptr);
-}
-
-TEST_F(UniquePtrTest, ArrayRelease) {
-    int *raw = new int[3]{1, 2, 3};
-    my_smart_ptr::UniquePtr<int[]> ptr(raw);
-
-    int *released = ptr.release();
-
-    EXPECT_EQ(released, raw);
-    EXPECT_EQ(ptr.get(), nullptr);
-
-    delete[] released;
-}
-
-TEST_F(UniquePtrTest, ArraySwap) {
-    int *raw1 = new int[3]{1, 2, 3};
-    int *raw2 = new int[2]{4, 5};
-
-    my_smart_ptr::UniquePtr<int[]> ptr1(raw1);
-    my_smart_ptr::UniquePtr<int[]> ptr2(raw2);
-
-    ptr1.swap(ptr2);
-
-    EXPECT_EQ(ptr1.get(), raw2);
-    EXPECT_EQ(ptr2.get(), raw1);
+    EXPECT_NO_THROW(a + b);
+    EXPECT_NO_THROW(a - b);
+    EXPECT_NO_THROW(a * b);
+    EXPECT_NO_THROW(a / BigInt("1234567890"));
 }
 
 int main(int argc, char **argv) {

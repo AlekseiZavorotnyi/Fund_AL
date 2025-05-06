@@ -35,25 +35,28 @@ BigInt::BigInt(long long value) {
 
 BigInt::BigInt(const std::string &str) {
     std::string temp = str;
-    if (temp.length() == 0) {
-        BigInt();
-    } else {
+    if (temp.empty()) {
+        digits.push_back(0);
         isNegative = false;
-        if (temp[0] == '-') {
-            isNegative = true;
-            temp = temp.substr(1);
-        }
-        if (!std::all_of(temp.begin(), temp.end(), ::isdigit)) {
-            throw std::invalid_argument("invalid number");
-        }
-        for (long long i = temp.length(); i > 0; i -= 9) {
-            if (i < 9) {
-                digits.push_back(atoi(temp.substr(0, i).c_str()));
-            } else {
-                digits.push_back(atoi(temp.substr(i - 9, 9).c_str()));
-            }
+        return;
+    }
+    isNegative = false;
+    if (temp[0] == '-') {
+        isNegative = true;
+        temp = temp.substr(1);
+    }
+    if (!std::all_of(temp.begin(), temp.end(), ::isdigit)) {
+        throw std::invalid_argument("invalid number");
+    }
+
+    for (long long i = temp.length(); i > 0; i -= 9) {
+        if (i < 9) {
+            digits.push_back(atoll(temp.substr(0, i).c_str()));
+        } else {
+            digits.push_back(atoll(temp.substr(i - 9, 9).c_str()));
         }
     }
+
 }
 
 BigInt::BigInt(const BigInt& other) {
@@ -115,18 +118,14 @@ BigInt& BigInt::operator=(BigInt&& other) noexcept {
 }
 
 bool BigInt::operator==(const BigInt &other) const {
-    if (isNegative != other.isNegative) {
-        return false;
+    bool this_zero = (digits.empty()) || (digits.size() == 1 && digits[0] == 0);
+    bool other_zero = (other.digits.empty()) || (other.digits.size() == 1 && other.digits[0] == 0);
+
+    if (this_zero && other_zero) {
+        return true;
     }
-    if (digits.size() != other.digits.size()) {
-        return false;
-    }
-    for (std::size_t i = 0; i < digits.size(); ++i) {
-        if (digits[i] != other.digits[i]) {
-            return false;
-        }
-    }
-    return true;
+
+    return (digits == other.digits) && (isNegative == other.isNegative);
 }
 
 bool BigInt::operator!=(const BigInt &other) const {
@@ -192,8 +191,11 @@ bool BigInt::operator>=(const BigInt &other) const {
 }
 
 void BigInt::remove_leading_zeros() {
-    while (digits.back() == 0 && digits.size() > 1) {
+    while (digits.size() > 1 && digits.back() == 0) {
         digits.pop_back();
+    }
+    if (digits.empty()) {
+        digits.push_back(0);
     }
 }
 
@@ -328,7 +330,6 @@ BigInt BigInt::operator/(const BigInt& other) const {
     BigInt res;
     BigInt current;
 
-    // Деление начинаем со старших разрядов
     for (int i = dividend.digits.size() - 1; i >= 0; --i) {
         current.digits.insert(current.digits.begin(), dividend.digits[i]);
         current.remove_leading_zeros();
