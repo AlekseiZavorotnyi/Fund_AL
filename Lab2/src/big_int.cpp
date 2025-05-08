@@ -1,11 +1,10 @@
 #include "big_int.h"
-
 #include <algorithm>
 #include <cstdint>
+#include <iomanip>
 #include <string>
 
 using ll = long long;
-
 using ull = unsigned long long;
 
 std::size_t num_length(uint64_t num) {
@@ -19,6 +18,7 @@ std::size_t num_length(uint64_t num) {
 
 BigInt::BigInt() {
     isNegative = false;
+    digits.push_back(0);
 }
 
 BigInt::BigInt(long long value) {
@@ -27,9 +27,13 @@ BigInt::BigInt(long long value) {
         isNegative = true;
         value = -value;
     }
-    while (value != 0) {
-        digits.push_back(value % BASE);
-        value /= BASE;
+    if (value == 0) {
+        digits.push_back(0);
+    } else {
+        while (value != 0) {
+            digits.push_back(value % BASE);
+            value /= BASE;
+        }
     }
 }
 
@@ -56,12 +60,12 @@ BigInt::BigInt(const std::string &str) {
             digits.push_back(atoll(temp.substr(i - 9, 9).c_str()));
         }
     }
-
+    remove_leading_zeros();
 }
 
 BigInt::BigInt(const BigInt& other) {
     isNegative = other.isNegative;
-    digits = std::vector<unsigned long long>(other.digits);
+    digits = other.digits;
 }
 
 BigInt::BigInt(BigInt&& other) noexcept {
@@ -74,7 +78,7 @@ BigInt::~BigInt() {
 }
 
 std::ostream &operator<<(std::ostream &os, const BigInt &num) {
-    if (num.digits.empty() || num.digits.back() == 0) {
+    if (num.digits.empty() || (num.digits.size() == 1 && num.digits[0] == 0)) {
         os << "0";
     } else {
         if (num.isNegative) {
@@ -106,26 +110,28 @@ std::istream& operator>>(std::istream& is, BigInt& num) {
 }
 
 BigInt& BigInt::operator=(const BigInt& other) {
-    isNegative = other.isNegative;
-    digits = std::vector<unsigned long long>(other.digits);
+    if (this != &other) {
+        isNegative = other.isNegative;
+        digits = other.digits;
+    }
     return *this;
 }
 
 BigInt& BigInt::operator=(BigInt&& other) noexcept {
-    isNegative = other.isNegative;
-    digits = std::move(other.digits);
+    if (this != &other) {
+        isNegative = other.isNegative;
+        digits = std::move(other.digits);
+    }
     return *this;
 }
 
 bool BigInt::operator==(const BigInt &other) const {
-    bool this_zero = (digits.empty()) || (digits.size() == 1 && digits[0] == 0);
-    bool other_zero = (other.digits.empty()) || (other.digits.size() == 1 && other.digits[0] == 0);
-
-    if (this_zero && other_zero) {
-        return true;
+    if (isNegative != other.isNegative) return false;
+    if (digits.size() != other.digits.size()) return false;
+    for (size_t i = 0; i < digits.size(); ++i) {
+        if (digits[i] != other.digits[i]) return false;
     }
-
-    return (digits == other.digits) && (isNegative == other.isNegative);
+    return true;
 }
 
 bool BigInt::operator!=(const BigInt &other) const {
@@ -133,61 +139,30 @@ bool BigInt::operator!=(const BigInt &other) const {
 }
 
 bool BigInt::operator<(const BigInt &other) const {
-    if (isNegative && !other.isNegative) {
-        return true;
+    if (isNegative != other.isNegative) {
+        return isNegative;
     }
-    if (!isNegative && other.isNegative) {
-        return false;
+    if (digits.size() != other.digits.size()) {
+        return (digits.size() < other.digits.size()) ^ isNegative;
     }
-    if (digits.size() > other.digits.size()) {
-        return false;
-    }
-    if (digits.size() < other.digits.size()) {
-        return true;
-    }
-    bool findLess = false;
-    for (std::size_t i = 0; i < digits.size(); ++i) {
-        if (!isNegative) {
-            if (digits[i] > other.digits[i]) {
-                return false;
-            }
-            if (digits[i] < other.digits[i]) {
-                findLess = true;
-            }
-        } else {
-            if (digits[i] < other.digits[i]) {
-                return false;
-            }
-            if (digits[i] > other.digits[i]) {
-                findLess = true;
-            }
+    for (int i = digits.size() - 1; i >= 0; --i) {
+        if (digits[i] != other.digits[i]) {
+            return (digits[i] < other.digits[i]) ^ isNegative;
         }
     }
-    return findLess;
+    return false;
 }
 
 bool BigInt::operator>(const BigInt &other) const {
-    if (*this == other) {
-        return false;
-    }
-    if (*this < other) {
-        return false;
-    }
-    return true;
+    return other < *this;
 }
 
 bool BigInt::operator<=(const BigInt &other) const {
-    if (*this > other) {
-        return false;
-    }
-    return true;
+    return !(other < *this);
 }
 
 bool BigInt::operator>=(const BigInt &other) const {
-    if (*this < other) {
-        return false;
-    }
-    return true;
+    return !(*this < other);
 }
 
 void BigInt::remove_leading_zeros() {
@@ -206,165 +181,130 @@ BigInt BigInt::abs() const {
 }
 
 BigInt BigInt::operator+(const BigInt& other) const {
-    BigInt res = BigInt();
-    res.isNegative = isNegative;
-    BigInt abs_cur = this->abs(), abs_other = other.abs();
-    if (isNegative && !other.isNegative && abs_cur < abs_other) {
-        res.isNegative = false;
-    }
-    if (!isNegative && other.isNegative && abs_cur < abs_other) {
-        res.isNegative = true;
-    }
     if (isNegative == other.isNegative) {
-        ull sum = 0;
-        ull max_size = std::max(digits.size(), other.digits.size());
-        ull min_size = std::min(digits.size(), other.digits.size());
-        for (size_t i = 0; i < max_size; i++) {
-            if (digits.size() > min_size && i >= min_size) {
-                sum += digits[i];
+        BigInt result;
+        result.isNegative = isNegative;
+
+        ull carry = 0;
+        size_t max_size = std::max(digits.size(), other.digits.size());
+        result.digits.resize(max_size, 0);
+
+        for (size_t i = 0; i < max_size || carry; ++i) {
+            if (i == result.digits.size()) {
+                result.digits.push_back(0);
             }
-            else if(other.digits.size() > min_size && i >= min_size) {
-                sum += other.digits[i];
-            }
-            else {
-                sum += digits[i] + other.digits[i];
-            }
-            res.digits.push_back(sum % BASE);
-            sum /= BASE;
+            ull sum = carry;
+            if (i < digits.size()) sum += digits[i];
+            if (i < other.digits.size()) sum += other.digits[i];
+            carry = sum / BASE;
+            result.digits[i] = sum % BASE;
         }
-        if (sum > 0) {
-            res.digits.push_back(sum % BASE);
+
+        result.remove_leading_zeros();
+        return result;
+    } else {
+        if (isNegative) {
+            return other - this->abs();
+        } else {
+            return *this - other.abs();
         }
     }
-    else {
-        if (abs_cur > abs_other) {
-            ull diff = 0;
-            ull max_size = digits.size();
-            ull min_size = other.digits.size();
-            int in_mind = 0;
-            for (size_t i = 0; i < min_size; i++) {
-                if ((digits[i] - in_mind) >= other.digits[i]) {
-                    diff = digits[i] - in_mind - other.digits[i];
-                    in_mind = 0;
-                }
-                else {
-                    diff = digits[i] - in_mind + BASE - other.digits[i];
-                    in_mind = 1;
-                }
-                res.digits.push_back(diff);
-                diff = 0;
-            }
-            for (size_t i = min_size; i < max_size; i++) {
-                if (!(i == max_size - 1 && (digits[i] - in_mind) == 0)) {
-                    res.digits.push_back(digits[i] - in_mind);
-                    in_mind = 0;
-                }
-
-            }
-        }
-        else {
-            ull diff = 0;
-            ull max_size = other.digits.size();
-            ull min_size = digits.size();
-            int in_mind = 0;
-            for (size_t i = 0; i < min_size; i++) {
-                if ((other.digits[i] - in_mind) >= digits[i]) {
-                    diff = other.digits[i] - in_mind - digits[i];
-                    in_mind = 0;
-                }
-                else {
-                    diff = other.digits[i] - in_mind + BASE - digits[i];
-                    in_mind = 1;
-                }
-                res.digits.push_back(diff);
-            }
-            for (size_t i = min_size; i < max_size; i++) {
-                if (!(i == max_size - 1 && (other.digits[i] - in_mind) == 0)) {
-                    res.digits.push_back(other.digits[i] - in_mind);
-                    in_mind = 0;
-                }
-
-            }
-        }
-    }
-    res.remove_leading_zeros();
-    return res;
 }
 
 BigInt BigInt::operator-(const BigInt& other) const {
-    BigInt res = other;
-    res.isNegative = !isNegative;
-    return *this + res;
+    if (isNegative != other.isNegative) {
+        BigInt tmp = other;
+        tmp.isNegative = !other.isNegative;
+        return *this + tmp;
+    }
+
+    if (abs() < other.abs()) {
+        BigInt result = other - *this;
+        result.isNegative = !isNegative;
+        return result;
+    }
+
+    BigInt result;
+    result.isNegative = isNegative;
+    result.digits.resize(digits.size(), 0);
+
+    ull borrow = 0;
+    for (size_t i = 0; i < digits.size(); ++i) {
+        ull diff = digits[i] - borrow;
+        if (i < other.digits.size()) {
+            diff -= other.digits[i];
+        }
+        borrow = (diff >= BASE) ? 1 : 0;
+        if (borrow) diff += BASE;
+        result.digits[i] = diff % BASE;
+    }
+
+    result.remove_leading_zeros();
+    return result;
 }
 
 BigInt BigInt::operator*(const BigInt& other) const {
-    BigInt res;
-    res.isNegative = (isNegative != other.isNegative);
-    res.digits.resize(digits.size() + other.digits.size(), 0);
-    
+    BigInt result;
+    result.isNegative = isNegative != other.isNegative;
+    result.digits.resize(digits.size() + other.digits.size(), 0);
+
     for (size_t i = 0; i < digits.size(); ++i) {
         ull carry = 0;
         for (size_t j = 0; j < other.digits.size() || carry; ++j) {
-            ull product = res.digits[i + j] + carry;
+            ull product = result.digits[i + j] + carry;
             if (j < other.digits.size()) {
                 product += digits[i] * other.digits[j];
             }
-            res.digits[i + j] = product % BASE;
             carry = product / BASE;
+            result.digits[i + j] = product % BASE;
         }
     }
-    res.remove_leading_zeros();
-    if (res.digits.size() == 1 && res.digits[0] == 0) {
-        res.isNegative = false;
+
+    result.remove_leading_zeros();
+    if (result.digits.size() == 1 && result.digits[0] == 0) {
+        result.isNegative = false;
     }
-    return res;
+    return result;
 }
 
 BigInt BigInt::operator/(const BigInt& other) const {
     if (other == BigInt(0)) {
-        throw std::invalid_argument("Divide by 0");
+        throw std::invalid_argument("Division by zero");
     }
-    int ind = 0;
 
-    BigInt res;
-    if (*this == res) {
-        return res;
+    BigInt abs_other = other.abs();
+    if (abs() < abs_other) {
+        return BigInt(0);
     }
-    res.digits.pop_back();
-    BigInt tmp;
-    tmp.digits.pop_back();
-    res.isNegative = (isNegative != other.isNegative);
-    BigInt other_abs = other.abs();
-    while (ind != static_cast<int>(digits.size())) {
-        tmp.digits.push_back(digits[ind]);
-        if (tmp >= other_abs) {
-            ll l = 0;
-            ll r = BASE;
-            while (l + 1 < r) {
-                const ll m = (l + r) / 2;
-                BigInt mult = (other_abs * BigInt(m));
-                if (tmp >= mult) {
-                    l = m;
-                } else {
-                    r = m;
-                }
-            }
-            res.digits.push_back(l);
-            tmp -= other_abs * BigInt(l);
-            if (tmp == BigInt(0)) {
-                tmp.digits.pop_back();
-            }
-        } else {
-            if (!res.digits.empty()) {
-                res.digits.push_back(0);
+
+    BigInt result, current;
+    result.isNegative = isNegative != other.isNegative;
+    result.digits.resize(digits.size(), 0);
+
+    for (int i = digits.size() - 1; i >= 0; --i) {
+        current.digits.insert(current.digits.begin(), digits[i]);
+        current.remove_leading_zeros();
+
+        ull l = 0, r = BASE;
+        while (l < r) {
+            ull m = (l + r + 1) / 2;
+            BigInt product = abs_other * BigInt(m);
+            if (product <= current) {
+                l = m;
+            } else {
+                r = m - 1;
             }
         }
-        ++ind;
+
+        result.digits[i] = l;
+        current -= abs_other * BigInt(l);
     }
-    if (res.digits.empty()) {
-        res.digits.push_back(0);
+
+    result.remove_leading_zeros();
+    if (result.digits.size() == 1 && result.digits[0] == 0) {
+        result.isNegative = false;
     }
-    return res;
+    return result;
 }
 
 BigInt BigInt::operator+=(const BigInt& other) {
@@ -381,16 +321,18 @@ BigInt BigInt::operator*=(const BigInt& other) {
     *this = *this * other;
     return *this;
 }
+
 BigInt BigInt::operator/=(const BigInt& other) {
     *this = *this / other;
     return *this;
 }
+
 BigInt BigInt::operator++() {
     *this += BigInt(1);
     return *this;
 }
+
 BigInt BigInt::operator--() {
     *this -= BigInt(1);
     return *this;
 }
-

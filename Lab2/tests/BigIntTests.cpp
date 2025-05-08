@@ -114,24 +114,22 @@ TEST(Operators, Division) {
 }
 
 TEST(Operators, CompoundAssignmentOperators) {
-    BigInt num1("123456789");
-    BigInt num2("987654321");
-    BigInt num3("-123456789");
+    BigInt num1("12347402428078456789");
+    BigInt num2("98765432829729388731");
+    BigInt num3("-12347402428078456789");
 
     num1 += num2;
-    EXPECT_EQ(BigInt("1111111110"), num1);
+    EXPECT_EQ(num1, BigInt("111112835257807845520"));
 
     num1 -= num2;
-    EXPECT_EQ(num1, BigInt("123456789"));
+    EXPECT_EQ(num1, BigInt("12347402428078456789"));
 
     num1 *= num2;
-    EXPECT_EQ(num1, BigInt("121932631112635269"));
-
+    EXPECT_EQ(num1, BigInt("1219496545132020383724120990446767044759"));
     num1 /= num2;
-    std::cout << num1 << std::endl;
-    EXPECT_EQ(num1, BigInt("123456789"));
+    EXPECT_EQ(num1, BigInt("12347402428078456789"));
 
-    num3 += BigInt("123456789");
+    num3 += BigInt("12347402428078456789");
     EXPECT_EQ(num3, BigInt(0));
 }
 
