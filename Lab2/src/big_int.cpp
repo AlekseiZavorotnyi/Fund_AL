@@ -336,3 +336,28 @@ BigInt BigInt::operator--() {
     *this -= BigInt(1);
     return *this;
 }
+
+BigInt BigInt::operator%(const BigInt& other) const {
+    if (*this >= other) {
+        BigInt res = *this - (*this / other) * other;
+        return res;
+    }
+    return *this;
+}
+
+
+BigInt BigInt::mod_exp(const BigInt& exp, const BigInt& mod) const {
+    if (exp < BigInt(2)) {
+        if (exp == BigInt(1)) {
+            return *this % mod;
+        }
+        return BigInt(1);
+    }
+    BigInt res = mod_exp(exp / BigInt(2), mod);
+    res = (res * res) % mod;
+    if (exp.digits[0] % 2 == 1) {
+        res = (res * *this) % mod;
+    }
+    return res;
+}
+

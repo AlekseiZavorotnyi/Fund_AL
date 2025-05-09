@@ -42,6 +42,8 @@ public:
     bool operator<=(const BigInt& other) const;
     bool operator>=(const BigInt& other) const;
 
+    BigInt operator%(const BigInt& other) const;
+
     void remove_leading_zeros();
 
     [[nodiscard]] BigInt abs() const;
