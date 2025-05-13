@@ -12,6 +12,9 @@ class BigInt {
 private:
     std::vector<unsigned long long> digits;
     bool isNegative;
+    void remove_leading_zeros();
+    [[nodiscard]] BigInt shift_left(size_t m) const;
+    static void split_at(const BigInt& num, size_t m, BigInt& high, BigInt& low) ;
 
 public:
     BigInt();
@@ -44,9 +47,6 @@ public:
     bool operator>=(const BigInt& other) const;
 
     BigInt operator%(const BigInt& other) const;
-
-    void remove_leading_zeros();
-
     [[nodiscard]] BigInt abs() const;
 
     [[nodiscard]] BigInt mod_exp(const BigInt& exp, const BigInt& mod) const;
@@ -54,9 +54,6 @@ public:
     void fft(std::vector<std::complex<long double>>& a, bool invert);
 
     [[nodiscard]] BigInt fft_multiply(const BigInt& a) const;
-
-    [[nodiscard]] BigInt shift_left(size_t m) const;
-    static void split_at(const BigInt& num, size_t m, BigInt& high, BigInt& low) ;
 
     [[nodiscard]] BigInt karatsuba_multiply(const BigInt& a) const;
     [[nodiscard]] BigInt newton_divide(const BigInt& a) const;

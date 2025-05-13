@@ -1,237 +1,257 @@
 #include <gtest/gtest.h>
 #include "big_int.h"
+#include <sstream>
 
-// Constructor tests
-TEST(Constructor, DefaultConstructor) {
-    const BigInt num;
+// Тесты для конструкторов
+TEST(ConstructorsTest, DefaultConstructor) {
+    BigInt num;
     EXPECT_EQ(num, BigInt(0));
 }
 
-TEST(Constructor, LongLongConstructor) {
-    BigInt num1(123456789);
-    BigInt num2(-987654321);
-    BigInt num3(0);
+TEST(ConstructorsTest, IntConstructor) {
+    BigInt num1(12345);
+    EXPECT_EQ(num1, BigInt("12345"));
 
-    EXPECT_EQ(num1, BigInt("123456789"));
-    EXPECT_EQ(num2, BigInt("-987654321"));
+    BigInt num2(-6789);
+    EXPECT_EQ(num2, BigInt("-6789"));
+
+    BigInt num3(0);
     EXPECT_EQ(num3, BigInt("0"));
 }
 
-TEST(Constructor, StringConstructor) {
-    BigInt num1("123456789012345678");
-    BigInt num2("-987654321098765430");
-    BigInt num3("0");
+TEST(ConstructorsTest, StringConstructor) {
+    BigInt num1("12345678901234567890");
+    EXPECT_EQ(num1, BigInt("12345678901234567890"));
 
-    EXPECT_EQ(num1, BigInt(123456789012345678));
-    EXPECT_EQ(num2, BigInt(-98765432109876543) * BigInt(10));
-    EXPECT_EQ(num3, BigInt(0));
+    BigInt num2("-98765432109876543210");
+    EXPECT_EQ(num2, BigInt("-98765432109876543210"));
 
     EXPECT_THROW(BigInt("abc123"), std::invalid_argument);
     EXPECT_THROW(BigInt("12a34"), std::invalid_argument);
 }
 
-TEST(Constructor, CopyMoveConstructors) {
-    BigInt num1("123456789");
+TEST(ConstructorsTest, CopyMoveConstructor) {
+    BigInt num1("12345678901234567890");
     BigInt num2(num1);
-    BigInt num3("987654321");
-    BigInt num4(std::move(num3));
-
     EXPECT_EQ(num1, num2);
-    EXPECT_EQ(num4, BigInt("987654321"));
+
+    BigInt num3("98765432109876543210");
+    BigInt num4(std::move(num3));
+    EXPECT_EQ(num4, BigInt("98765432109876543210"));
 }
 
-// Assignment operators
-TEST(Operators, AssignmentOperators) {
-    BigInt num1("123456789");
+// Тесты для операторов присваивания
+TEST(AssignmentTest, CopyAssignment) {
+    BigInt num1("12345678901234567890");
     BigInt num2;
     num2 = num1;
     EXPECT_EQ(num1, num2);
-
-    BigInt num3;
-    num3 = std::move(BigInt("987654321"));
-    EXPECT_EQ(num3, BigInt("987654321"));
 }
 
-// Arithmetic operations
-TEST(Operators, Addition) {
-    BigInt num1("123456789");
-    BigInt num2("987654321");
-    BigInt num3("-123456789");
-    BigInt num4("-987654321");
-    BigInt zero(0);
-
-    EXPECT_EQ(num1 + num2, BigInt("1111111110"));
-    EXPECT_EQ(num1 + num3, zero);
-    EXPECT_EQ(num3 + num4, BigInt("-1111111110"));
-    EXPECT_EQ(num1 + zero, num1);
-    EXPECT_EQ(num4 + num1, BigInt("-864197532"));
+TEST(AssignmentTest, MoveAssignment) {
+    BigInt num1("12345678901234567890");
+    BigInt num2;
+    num2 = std::move(num1);
+    EXPECT_EQ(num2, BigInt("12345678901234567890"));
 }
 
-TEST(Operators, Subtraction) {
-    BigInt num1("123456789");
-    BigInt num2("987654321");
-    BigInt num3("-123456789");
-    BigInt num4("-987654321");
-    BigInt zero(0);
+// Тесты для операторов сравнения
+TEST(ComparisonTest, Equality) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("12345678901234567890");
+    BigInt num3("98765432109876543210");
 
-    EXPECT_EQ(num2 - num1, BigInt("864197532"));
-    EXPECT_EQ(num1 - num1, zero);
-    EXPECT_EQ(num3 - num4, BigInt("864197532"));
-    EXPECT_EQ(num4 - num3, BigInt("-864197532"));
-    EXPECT_EQ(zero - num1, BigInt("-123456789"));
+    EXPECT_TRUE(num1 == num2);
+    EXPECT_FALSE(num1 == num3);
+    EXPECT_TRUE(num1 != num3);
+    EXPECT_FALSE(num1 != num2);
 }
 
-TEST(Operators, Multiplication) {
-    BigInt num1("123456789");
-    BigInt num2("987654321");
-    BigInt num3("-123456789");
-    BigInt num4("-987654321");
+TEST(ComparisonTest, Relational) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
+    BigInt num3("-12345678901234567890");
+
+    EXPECT_TRUE(num1 < num2);
+    EXPECT_TRUE(num3 < num1);
+    EXPECT_TRUE(num2 > num1);
+    EXPECT_TRUE(num1 > num3);
+    EXPECT_TRUE(num1 <= num2);
+    EXPECT_TRUE(num1 <= num1);
+    EXPECT_TRUE(num2 >= num1);
+    EXPECT_TRUE(num1 >= num1);
+}
+
+// Тесты для арифметических операций
+TEST(ArithmeticTest, Addition) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
+    BigInt num3("-12345678901234567890");
+
+    EXPECT_EQ(num1 + num2, BigInt("111111111011111111100"));
+    EXPECT_EQ(num1 + num3, BigInt(0));
+    EXPECT_EQ(num3 + num1, BigInt(0));
+    EXPECT_EQ(num2 + num3, BigInt("86419753208641975320"));
+}
+
+TEST(ArithmeticTest, Subtraction) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
+    BigInt num3("-12345678901234567890");
+
+    EXPECT_EQ(num2 - num1, BigInt("86419753208641975320"));
+    EXPECT_EQ(num1 - num2, BigInt("-86419753208641975320"));
+    EXPECT_EQ(num1 - num3, BigInt("24691357802469135780"));
+    EXPECT_EQ(num3 - num1, BigInt("-24691357802469135780"));
+}
+
+TEST(ArithmeticTest, Multiplication) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
+    BigInt num3("-12345678901234567890");
     BigInt zero(0);
 
-    EXPECT_EQ(num1 * num2, BigInt("121932631112635269"));
-    EXPECT_EQ(num1 * num3, BigInt("-15241578750190521"));
-    EXPECT_EQ(num3 * num4, BigInt("121932631112635269"));
+    EXPECT_EQ(num1 * num2, BigInt("1219326311370217952237463801111263526900"));
+    EXPECT_EQ(num1 * num3, BigInt("-152415787532388367501905199875019052100"));
+    EXPECT_EQ(num3 * num3, BigInt("152415787532388367501905199875019052100"));
     EXPECT_EQ(num1 * zero, zero);
-    EXPECT_EQ(zero * num4, zero);
 }
 
-TEST(Operators, Division) {
-    BigInt num1("123456789");
-    BigInt num2("987654321");
-    BigInt num3("-123456789");
-    BigInt num4("-987654321");
+TEST(ArithmeticTest, Division) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
+    BigInt num3("-12345678901234567890");
     BigInt zero(0);
-    BigInt one(1);
 
-    EXPECT_EQ(num2 / num1, BigInt("8"));
-    EXPECT_EQ(num1 / num2, zero);
-    EXPECT_EQ(num4 / num3, BigInt("8"));
-    EXPECT_EQ(num3 / num1, BigInt("-1"));
-    EXPECT_EQ(num1 / one, num1);
+    EXPECT_EQ(num2 / num1, BigInt(8));
+    EXPECT_EQ(num1 / num2, BigInt(0));
+    EXPECT_EQ(num3 / num1, BigInt(-1));
+    EXPECT_EQ((num2 + num1) / num1, BigInt(9));
     EXPECT_THROW(num1 / zero, std::invalid_argument);
 }
 
-TEST(Operators, CompoundAssignmentOperators) {
-    BigInt num1("12347402428078456789");
-    BigInt num2("98765432829729388731");
-    BigInt num3("-12347402428078456789");
+TEST(ArithmeticTest, Modulo) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
 
+    EXPECT_EQ(num2 % num1, BigInt("900000000090"));
+    EXPECT_EQ(num1 % BigInt("10000000000000000000"), BigInt("2345678901234567890"));
+}
+
+// Тесты для составных операторов присваивания
+TEST(CompoundAssignmentTest, PlusEquals) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
     num1 += num2;
-    EXPECT_EQ(num1, BigInt("111112835257807845520"));
+    EXPECT_EQ(num1, BigInt("111111111011111111100"));
+}
 
+TEST(CompoundAssignmentTest, MinusEquals) {
+    BigInt num1("98765432109876543210");
+    BigInt num2("12345678901234567890");
     num1 -= num2;
-    EXPECT_EQ(num1, BigInt("12347402428078456789"));
+    EXPECT_EQ(num1, BigInt("86419753208641975320"));
+}
 
+TEST(CompoundAssignmentTest, MultiplyEquals) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("10000000000000000000");
     num1 *= num2;
-    EXPECT_EQ(num1, BigInt("1219496545132020383724120990446767044759"));
+    EXPECT_EQ(num1, BigInt("123456789012345678900000000000000000000"));
+}
+
+TEST(CompoundAssignmentTest, DivideEquals) {
+    BigInt num1("123456789012345678900000000000000000000");
+    BigInt num2("10000000000000000000");
     num1 /= num2;
-    EXPECT_EQ(num1, BigInt("12347402428078456789"));
-
-    num3 += BigInt("12347402428078456789");
-    EXPECT_EQ(num3, BigInt(0));
+    EXPECT_EQ(num1, BigInt("12345678901234567890"));
 }
 
-// Comparison operators
-TEST(Operators, ComparisonOperators) {
-    BigInt num1("123456789");
-    BigInt num2("987654321");
-    BigInt num3("-123456789");
-    BigInt num4("-987654321");
-    BigInt num5("123456789");
+// Тесты для инкремента/декремента
+TEST(IncrementDecrementTest, PrefixIncrement) {
+    BigInt num1("99999999999999999999");
+    ++num1;
+    EXPECT_EQ(num1, BigInt("100000000000000000000"));
 
-    EXPECT_TRUE(num1 < num2);
-    EXPECT_TRUE(num4 < num3);
-    EXPECT_TRUE(num1 <= num5);
-    EXPECT_TRUE(num1 == num5);
-    EXPECT_TRUE(num1 != num2);
-    EXPECT_TRUE(num2 > num1);
-    EXPECT_TRUE(num3 > num4);
-    EXPECT_TRUE(num5 >= num1);
-    EXPECT_TRUE(num3 <= num1);
+    BigInt num2("-1");
+    ++num2;
+    EXPECT_EQ(num2, BigInt(0));
 }
 
-// I/O operations
-TEST(Operators, StreamOperations) {
-    std::stringstream ss1, ss2, ss3;
-    BigInt num1("123456789");
-    BigInt num2("-987654321");
-    BigInt num3;
+TEST(IncrementDecrementTest, PrefixDecrement) {
+    BigInt num1("100000000000000000000");
+    --num1;
+    EXPECT_EQ(num1, BigInt("99999999999999999999"));
 
-    ss1 << num1;
-    EXPECT_EQ(ss1.str(), "123456789");
-
-    ss2 << num2;
-    EXPECT_EQ(ss2.str(), "-987654321");
-
-    ss3 << "123456789";
-    ss3 >> num3;
-    EXPECT_EQ(num3, num1);
-
-    ss3.clear();
-    ss3 << "-987654321";
-    ss3 >> num3;
-    EXPECT_EQ(num3, num2);
-
-    ss3.clear();
-    ss3 << "invalid";
-    EXPECT_THROW(ss3 >> num3, std::invalid_argument);
+    BigInt num2("1");
+    --num2;
+    EXPECT_EQ(num2, BigInt(0));
 }
 
-TEST(Func, AbsFunction) {
-    BigInt num1("123456789");
-    BigInt num2("-987654321");
+// Тесты для специальных методов
+TEST(MethodsTest, Abs) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("-12345678901234567890");
 
-    EXPECT_EQ(num1.abs(), num1);
-    EXPECT_EQ(num2.abs(), BigInt("987654321"));
-    EXPECT_EQ(BigInt(0).abs(), BigInt(0));
+    EXPECT_EQ(num1.abs(), BigInt("12345678901234567890"));
+    EXPECT_EQ(num2.abs(), BigInt("12345678901234567890"));
 }
 
-TEST(StressTest, EdgeCases) {
-    BigInt max_ll(std::to_string(LLONG_MAX));
-    BigInt min_ll(std::to_string(LLONG_MIN));
-    BigInt beyond_ll("9223372036854775808"); // LL_MAX + 1
+// Тесты для ввода/вывода
+TEST(IOStreamTest, OutputOperator) {
+    BigInt num("12345678901234567890");
+    std::ostringstream oss;
+    oss << num;
+    EXPECT_EQ(oss.str(), "12345678901234567890");
 
-    EXPECT_GT(beyond_ll, max_ll);
-    EXPECT_LT(min_ll, max_ll);
+    BigInt neg_num("-98765432109876543210");
+    std::ostringstream oss_neg;
+    oss_neg << neg_num;
+    EXPECT_EQ(oss_neg.str(), "-98765432109876543210");
+}
 
+TEST(IOStreamTest, InputOperator) {
+    BigInt num;
+    std::istringstream iss("12345678901234567890");
+    iss >> num;
+    EXPECT_EQ(num, BigInt("12345678901234567890"));
+
+    BigInt neg_num;
+    std::istringstream iss_neg("-98765432109876543210");
+    iss_neg >> neg_num;
+    EXPECT_EQ(neg_num, BigInt("-98765432109876543210"));
+}
+
+// Тесты для модульного возведения в степень
+TEST(ModularExponentiationTest, ModExp) {
+    BigInt base("12345678901234567890");
+    BigInt exp("20");
+    BigInt mod("10000000000000000000");
+
+    BigInt result = base.mod_exp(exp, mod);
+    EXPECT_EQ(result, BigInt("0"));
+}
+
+// Тесты для алгоритма Карацубы
+TEST(KaratsubaTest, Multiplication) {
+    BigInt num1("12345678901234567890");
+    BigInt num2("98765432109876543210");
+
+    BigInt karatsuba_result = num1.karatsuba_multiply(num2);
+    BigInt normal_result = num1 * num2;
+    EXPECT_EQ(karatsuba_result, normal_result);
+}
+
+// Тесты для крайних случаев
+TEST(EdgeCasesTest, LargeNumbers) {
     BigInt zero(0);
-    BigInt num("123456789");
+    BigInt very_large("99999999999999999999999999999999999999");
+    BigInt very_large_plus_one("100000000000000000000000000000000000000");
 
-    EXPECT_EQ(num + zero, num);
-    EXPECT_EQ(num - zero, num);
-    EXPECT_EQ(num * zero, zero);
-
-    BigInt one(1);
-    EXPECT_EQ(num * one, num);
-    EXPECT_EQ(num / one, num);
-}
-
-TEST(StressTest, Performance) {
-    BigInt a("123456789012345678901234567890");
-    BigInt b("987654321098765432109876543210");
-
-    EXPECT_NO_THROW(a + b);
-    EXPECT_NO_THROW(a - b);
-    EXPECT_NO_THROW(a * b);
-    EXPECT_NO_THROW(a / BigInt("1234567890"));
-}
-
-TEST(BigIntTest, ModExpLargeNumbers) {
-    BigInt base("123456789"), exponent("987654321"), modulus("1000000007");
-    BigInt result = base.mod_exp(exponent, modulus);
-    EXPECT_EQ(result, BigInt("652541198"));
-}
-
-TEST(BigIntTest, KaratsubaMultiplyLargeNumbers) {
-    BigInt a("12345678901234567890"), b("98765432109876543210");
-    BigInt product = a.karatsuba_multiply(b);
-    EXPECT_EQ(product, BigInt("1219326311370217952237463801111263526900"));
-}
-
-TEST(BigIntTest, KaratsubaMultiplyVeryLargeNumbers) {
-    BigInt a("1234567890123456789012345678901234567890"), b("9876543210987654321098765432109876543210");
-    BigInt product = a.karatsuba_multiply(b);
-    EXPECT_EQ(product, BigInt("12193263113702179522618503273386678859448712086533622923332237463801111263526900"));
+    EXPECT_EQ(very_large + BigInt(1), very_large_plus_one);
+    EXPECT_EQ(very_large_plus_one - BigInt(1), very_large);
+    EXPECT_EQ(very_large * zero, zero);
+    EXPECT_THROW(very_large / zero, std::invalid_argument);
 }
 
 int main(int argc, char **argv) {

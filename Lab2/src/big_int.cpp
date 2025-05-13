@@ -491,4 +491,3 @@ BigInt BigInt::karatsuba_multiply(const BigInt& other) const {
 
     return result;
 }
-
