@@ -1,5 +1,7 @@
 #include "big_int.h"
 #include <algorithm>
+#include <complex>
+#include <cmath>
 #include <cstdint>
 #include <iomanip>
 #include <string>
@@ -345,7 +347,6 @@ BigInt BigInt::operator%(const BigInt& other) const {
     return *this;
 }
 
-
 BigInt BigInt::mod_exp(const BigInt& exp, const BigInt& mod) const {
     if (exp < BigInt(2)) {
         if (exp == BigInt(1)) {
@@ -359,5 +360,135 @@ BigInt BigInt::mod_exp(const BigInt& exp, const BigInt& mod) const {
         res = (res * *this) % mod;
     }
     return res;
+}
+
+/*void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert)
+{
+    auto size = a.size();
+    if (size == 1)  return;
+
+    std::vector<std::complex<long double>> a0(size / 2);
+    std::vector<std::complex<long double>> a1(size / 2);
+    for (unsigned i = 0, j = 0; i < size; i += 2, j++)
+    {
+        a0[j] = a[i];
+        a1[j] = a[i + 1];
+    }
+
+    fft(a0, invert);
+    fft(a1, invert);
+
+    long double ang = 2 * ((long double)(M_PI)) / size * (invert ? -1 : 1);
+    std::complex<long double> w(1);
+    std::complex<long double> wn(cosl(ang), sinl(ang));
+    for (unsigned int i = 0; i < size / 2; ++i) {
+        a[i] = a0[i] + w * a1[i];
+        a[i + size / 2] = a0[i] - w * a1[i];
+        if (invert)
+            a[i] /= 2, a[i + size / 2] /= 2;
+        w *= wn;
+    }
+}
+
+BigInt BigInt::fft_multiply(const BigInt& second) const
+{
+    BigInt res;
+    res.setBase(1000000, 7);
+
+    res.isNegative = isNegative ^ second.isNegative;
+
+    std::vector<std::complex<long double>> fa(digits.begin(), digits.end());
+    std::vector<std::complex<long double>> fb(second.digits.begin(), second.digits.end());
+
+    uint size = 1;
+    while (size < std::max(digits.size(), second.digits.size()))
+        size <<= 1;
+
+    size <<= 1;
+    fa.resize(size);
+    fb.resize(size);
+
+    fft(fa, false);
+    fft(fb, false);
+    for (uint i = 0; i < size; ++i)
+        fa[i] = fb[i];
+    fft(fa, true);
+
+    unsigned long long count = 0;
+    for (auto elem : fa) 
+    {
+        unsigned long long tmp = (unsigned long long)(elem.real() + 0.5) + count;
+        count = 0;
+        if (tmp < 0)
+        {
+            count = -1 + ((tmp + 1) / BASE);
+            tmp -= BASE * count;
+        }
+        if (tmp >= BASE)
+        {
+            count = (tmp / BASE);
+            tmp -= BASE * count;
+        }
+        res.digits.push_back(tmp % BASE);
+    }
+
+    res.digits.push_back(count);
+
+
+    res.remove_leading_zeros();
+
+    return res;
+}*/
+
+void BigInt::split_at(const BigInt& num, size_t m, BigInt& high, BigInt& low) {
+    if (m >= num.digits.size()) {
+        high = BigInt(0);
+        low = num;
+    } else {
+        high.digits.assign(num.digits.begin() + m, num.digits.end());
+        low.digits.assign(num.digits.begin(), num.digits.begin() + m);
+        high.remove_leading_zeros();
+        low.remove_leading_zeros();
+    }
+    high.isNegative = num.isNegative;
+    low.isNegative = num.isNegative;
+}
+
+BigInt BigInt::shift_left(size_t m) const {
+    if (*this == BigInt(0)) {
+        return *this;
+    }
+
+    BigInt result(*this);
+    result.digits.insert(result.digits.begin(), m, 0);
+    return result;
+}
+
+BigInt BigInt::karatsuba_multiply(const BigInt& other) const {
+    if (digits.size() <= 10 || other.digits.size() <= 10) {
+        return *this * other;
+    }
+
+    size_t m = std::max(digits.size(), other.digits.size());
+    m = m / 2 + m % 2;
+
+    BigInt a, b, c, d;
+    split_at(*this, m, a, b);
+    split_at(other, m, c, d);
+
+    BigInt ac = a.karatsuba_multiply(c);
+    BigInt bd = b.karatsuba_multiply(d);
+    BigInt ab_cd = (a + b).karatsuba_multiply(c + d);
+
+    BigInt ad_bc = ab_cd - ac - bd;
+
+    BigInt result = ac.shift_left(2 * m) + ad_bc.shift_left(m) + bd;
+
+    result.isNegative = (this->isNegative != other.isNegative);
+    if (result.digits.size() == 1 && result.digits[0] == 0) {
+        result.isNegative = false;
+    }
+
+    return result;
 }
 

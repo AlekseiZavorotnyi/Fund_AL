@@ -4,5 +4,6 @@
 int main() {
     BigInt bigint("3");
     BigInt bigint1("18");
-    std::cout << bigint.mod_exp(bigint1, BigInt(1024)) << std::endl;
+    BigInt bigint2 = bigint.karatsuba_multiply(bigint1);
+    std::cout << bigint2 << std::endl;
 }

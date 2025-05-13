@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 #include "big_int.h"
 
-
-
 // Constructor tests
 TEST(Constructor, DefaultConstructor) {
     const BigInt num;
@@ -216,6 +214,24 @@ TEST(StressTest, Performance) {
     EXPECT_NO_THROW(a - b);
     EXPECT_NO_THROW(a * b);
     EXPECT_NO_THROW(a / BigInt("1234567890"));
+}
+
+TEST(BigIntTest, ModExpLargeNumbers) {
+    BigInt base("123456789"), exponent("987654321"), modulus("1000000007");
+    BigInt result = base.mod_exp(exponent, modulus);
+    EXPECT_EQ(result, BigInt("652541198"));
+}
+
+TEST(BigIntTest, KaratsubaMultiplyLargeNumbers) {
+    BigInt a("12345678901234567890"), b("98765432109876543210");
+    BigInt product = a.karatsuba_multiply(b);
+    EXPECT_EQ(product, BigInt("1219326311370217952237463801111263526900"));
+}
+
+TEST(BigIntTest, KaratsubaMultiplyVeryLargeNumbers) {
+    BigInt a("1234567890123456789012345678901234567890"), b("9876543210987654321098765432109876543210");
+    BigInt product = a.karatsuba_multiply(b);
+    EXPECT_EQ(product, BigInt("12193263113702179522618503273386678859448712086533622923332237463801111263526900"));
 }
 
 int main(int argc, char **argv) {

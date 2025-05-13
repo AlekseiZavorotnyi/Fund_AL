@@ -1,6 +1,7 @@
 #ifndef BIG_INT_H
 #define BIG_INT_H
 
+#include <complex>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -49,7 +50,14 @@ public:
     [[nodiscard]] BigInt abs() const;
 
     [[nodiscard]] BigInt mod_exp(const BigInt& exp, const BigInt& mod) const;
+
+    void fft(std::vector<std::complex<long double>>& a, bool invert);
+
     [[nodiscard]] BigInt fft_multiply(const BigInt& a) const;
+
+    [[nodiscard]] BigInt shift_left(size_t m) const;
+    static void split_at(const BigInt& num, size_t m, BigInt& high, BigInt& low) ;
+
     [[nodiscard]] BigInt karatsuba_multiply(const BigInt& a) const;
     [[nodiscard]] BigInt newton_divide(const BigInt& a) const;
 
