@@ -444,47 +444,46 @@ void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert)
 
 
 
-BigInt BigInt::multFurie(const BigInt& second)
-{
-    BigInt res;
+BigInt BigInt::multFurie(const BigInt& second) const {
+    BigInt result;
+    result.isNegative = isNegative != second.isNegative;
 
-    res.isNegative = isNegative ^ second.isNegative;
-
+    // Подготовка векторов для FFT
     std::vector<std::complex<long double>> fa(digits.begin(), digits.end());
     std::vector<std::complex<long double>> fb(second.digits.begin(), second.digits.end());
 
-    uint size = 1;
-    while (size < std::max(digits.size(), second.digits.size())) {
-        size <<= 1;
-    }
-    size <<= 1;
-    fa.resize(size);
-    fb.resize(size);
+    // Находим ближайшую степень двойки, достаточную для хранения результата
+    size_t n = 1;
+    while (n < std::max(fa.size(), fb.size())) n <<= 1;
+    n <<= 1;
+    fa.resize(n);
+    fb.resize(n);
 
+    // Выполняем прямое преобразование Фурье
     fft(fa, false);
     fft(fb, false);
-    for (uint i = 0; i < size; ++i)
-        fa[i] = fb[i];
+
+    // Поэлементное умножение
+    for (size_t i = 0; i < n; ++i)
+        fa[i] *= fb[i];
+
+    // Обратное преобразование Фурье
     fft(fa, true);
 
-    unsigned long long count = 0;
-    for (auto elem : fa)
-    {
-        unsigned long long tmp = (unsigned long long)(elem.real() + 0.5) + count;
-        count = 0;
-
-        if (tmp >= BASE)
-        {
-            count = (tmp / BASE);
-            tmp -= BASE * count;
-        }
-        res.digits.push_back(tmp % BASE);
+    // Обработка результатов и переносы
+    unsigned long long carry = 0;
+    for (auto &x : fa) {
+        unsigned long long current = (unsigned long long)(x.real() + 0.5) + carry;
+        carry = current / BASE;
+        result.digits.push_back(current % BASE);
     }
 
-    res.digits.push_back(count);
+    // Добавляем оставшийся перенос
+    while (carry) {
+        result.digits.push_back(carry % BASE);
+        carry /= BASE;
+    }
 
-
-    res.remove_leading_zeros();
-
-    return res;
+    result.remove_leading_zeros();
+    return result;
 }
