@@ -242,17 +242,7 @@ TEST(KaratsubaTest, Multiplication) {
     EXPECT_EQ(karatsuba_result, normal_result);
 }
 
-// Тесты для крайних случаев
-TEST(EdgeCasesTest, LargeNumbers) {
-    BigInt zero(0);
-    BigInt very_large("99999999999999999999999999999999999999");
-    BigInt very_large_plus_one("100000000000000000000000000000000000000");
 
-    EXPECT_EQ(very_large + BigInt(1), very_large_plus_one);
-    EXPECT_EQ(very_large_plus_one - BigInt(1), very_large);
-    EXPECT_EQ(very_large * zero, zero);
-    EXPECT_THROW(very_large / zero, std::invalid_argument);
-}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

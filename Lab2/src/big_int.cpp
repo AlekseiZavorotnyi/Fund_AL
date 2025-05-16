@@ -362,15 +362,13 @@ BigInt BigInt::mod_exp(const BigInt& exp, const BigInt& mod) const {
     return res;
 }
 
-/*void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert)
-{
+void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert) {
     auto size = a.size();
     if (size == 1)  return;
 
     std::vector<std::complex<long double>> a0(size / 2);
     std::vector<std::complex<long double>> a1(size / 2);
-    for (unsigned i = 0, j = 0; i < size; i += 2, j++)
-    {
+    for (unsigned i = 0, j = 0; i < size; i += 2, j++) {
         a0[j] = a[i];
         a1[j] = a[i + 1];
     }
@@ -379,7 +377,7 @@ BigInt BigInt::mod_exp(const BigInt& exp, const BigInt& mod) const {
     fft(a1, invert);
 
     long double ang = 2 * ((long double)(M_PI)) / size * (invert ? -1 : 1);
-    std::complex<long double> w(1);
+    std::complex<long double> w(1.0);
     std::complex<long double> wn(cosl(ang), sinl(ang));
     for (unsigned int i = 0; i < size / 2; ++i) {
         a[i] = a0[i] + w * a1[i];
@@ -389,56 +387,6 @@ BigInt BigInt::mod_exp(const BigInt& exp, const BigInt& mod) const {
         w *= wn;
     }
 }
-
-BigInt BigInt::fft_multiply(const BigInt& second) const
-{
-    BigInt res;
-    res.setBase(1000000, 7);
-
-    res.isNegative = isNegative ^ second.isNegative;
-
-    std::vector<std::complex<long double>> fa(digits.begin(), digits.end());
-    std::vector<std::complex<long double>> fb(second.digits.begin(), second.digits.end());
-
-    uint size = 1;
-    while (size < std::max(digits.size(), second.digits.size()))
-        size <<= 1;
-
-    size <<= 1;
-    fa.resize(size);
-    fb.resize(size);
-
-    fft(fa, false);
-    fft(fb, false);
-    for (uint i = 0; i < size; ++i)
-        fa[i] = fb[i];
-    fft(fa, true);
-
-    unsigned long long count = 0;
-    for (auto elem : fa) 
-    {
-        unsigned long long tmp = (unsigned long long)(elem.real() + 0.5) + count;
-        count = 0;
-        if (tmp < 0)
-        {
-            count = -1 + ((tmp + 1) / BASE);
-            tmp -= BASE * count;
-        }
-        if (tmp >= BASE)
-        {
-            count = (tmp / BASE);
-            tmp -= BASE * count;
-        }
-        res.digits.push_back(tmp % BASE);
-    }
-
-    res.digits.push_back(count);
-
-
-    res.remove_leading_zeros();
-
-    return res;
-}*/
 
 void BigInt::split_at(const BigInt& num, size_t m, BigInt& high, BigInt& low) {
     if (m >= num.digits.size()) {
