@@ -82,25 +82,19 @@ BigInt::~BigInt() {
 std::ostream &operator<<(std::ostream &os, const BigInt &num) {
     if (num.digits.empty() || (num.digits.size() == 1 && num.digits[0] == 0)) {
         os << "0";
-    } else {
-        if (num.isNegative) {
-            os << "-";
-        }
-        for (ll i = num.digits.size() - 1; i >= 0; i--) {
-            if (num.digits[i] == 0) {
-                os << "000000000";
-            } else {
-                if (i != static_cast<long long>(num.digits.size()) - 1) {
-                    std::size_t len = num_length(num.digits[i]);
-                    if (len < 9) {
-                        std::string s(9 - len, '0');
-                        os << s;
-                    }
-                }
-                os << num.digits[i];
-            }
-        }
+        return os;
     }
+
+    if (num.isNegative) {
+        os << "-";
+    }
+
+    os << num.digits.back();
+
+    for (auto it = num.digits.rbegin() + 1; it != num.digits.rend(); ++it) {
+        os << std::setw(9) << std::setfill('0') << *it;
+    }
+
     return os;
 }
 
@@ -414,76 +408,88 @@ BigInt BigInt::karatsuba_multiply(const BigInt& other) const {
     return result;
 }
 
-void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert)
-{
-    auto size = a.size();
-    if (size == 1)  return;
+void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert) {
+    size_t n = a.size();
+    if (n <= 1) return;
 
-    std::vector<std::complex<long double>> a0(size / 2);
-    std::vector<std::complex<long double>> a1(size / 2);
-    for (unsigned i = 0, j = 0; i < size; i += 2, j++)
-    {
-        a0[j] = a[i];
-        a1[j] = a[i + 1];
+    // Разделение на четные и нечетные позиции
+    std::vector<std::complex<long double>> a0(n/2), a1(n/2);
+    for (size_t i = 0; i < n/2; ++i) {
+        a0[i] = a[i*2];
+        a1[i] = a[i*2+1];
     }
 
     fft(a0, invert);
     fft(a1, invert);
 
-    long double ang = 2 * ((long double)(M_PI)) / size * (invert ? -1 : 1);
-    std::complex<long double> w(1.0);
-    std::complex<long double> wn(cosl(ang), sinl(ang));
-    for (unsigned int i = 0; i < size / 2; ++i) {
-        a[i] = a0[i] + w * a1[i];
-        a[i + size / 2] = a0[i] - w * a1[i];
-        if (invert)
-            a[i] /= 2, a[i + size / 2] /= 2;
+    // Точное вычисление угла
+    long double angle = 2 * M_PIl / n * (invert ? -1 : 1);
+    std::complex<long double> w(1.0), wn(std::polar(1.0L, angle));
+
+    for (size_t i = 0; i < n/2; ++i) {
+        auto temp = w * a1[i];
+        a[i] = a0[i] + temp;
+        a[i+n/2] = a0[i] - temp;
+        if (invert) {
+            a[i] /= 2;
+            a[i+n/2] /= 2;
+        }
         w *= wn;
     }
 }
 
-
-
-BigInt BigInt::multFurie(const BigInt& second) const {
+BigInt BigInt::multFurie(const BigInt& other) {
     BigInt result;
-    result.isNegative = isNegative != second.isNegative;
+    result.isNegative = isNegative != other.isNegative;
 
-    // Подготовка векторов для FFT
     std::vector<std::complex<long double>> fa(digits.begin(), digits.end());
-    std::vector<std::complex<long double>> fb(second.digits.begin(), second.digits.end());
+    std::vector<std::complex<long double>> fb(other.digits.begin(), other.digits.end());
 
-    // Находим ближайшую степень двойки, достаточную для хранения результата
     size_t n = 1;
-    while (n < std::max(fa.size(), fb.size())) n <<= 1;
-    n <<= 1;
+    size_t target_size = digits.size() + other.digits.size();
+    while (n < target_size) n <<= 1;
+
     fa.resize(n);
     fb.resize(n);
 
-    // Выполняем прямое преобразование Фурье
     fft(fa, false);
     fft(fb, false);
 
-    // Поэлементное умножение
-    for (size_t i = 0; i < n; ++i)
+    for (size_t i = 0; i < n; ++i) {
         fa[i] *= fb[i];
-
-    // Обратное преобразование Фурье
-    fft(fa, true);
-
-    // Обработка результатов и переносы
-    unsigned long long carry = 0;
-    for (auto &x : fa) {
-        unsigned long long current = (unsigned long long)(x.real() + 0.5) + carry;
-        carry = current / BASE;
-        result.digits.push_back(current % BASE);
     }
 
-    // Добавляем оставшийся перенос
+    fft(fa, true);
+
+    unsigned long long carry = 0;
+    std::vector<unsigned long long> temp_digits;
+
+    for (auto& x : fa) {
+        long double val = x.real();
+        long double rounded = std::round(val);
+
+        if (rounded < -0.5) rounded = 0;
+        else if (rounded < 0) rounded = 0;
+
+        unsigned long long current = static_cast<unsigned long long>(rounded + 0.5) + carry;
+        carry = current / BASE;
+        temp_digits.push_back(current % BASE);
+    }
+
     while (carry) {
-        result.digits.push_back(carry % BASE);
+        temp_digits.push_back(carry % BASE);
         carry /= BASE;
     }
 
-    result.remove_leading_zeros();
+    while (!temp_digits.empty() && temp_digits.back() == 0) {
+        temp_digits.pop_back();
+    }
+
+    if (temp_digits.empty()) {
+        temp_digits.push_back(0);
+        result.isNegative = false;
+    }
+
+    result.digits = std::move(temp_digits);
     return result;
 }
