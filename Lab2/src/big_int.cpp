@@ -362,32 +362,6 @@ BigInt BigInt::mod_exp(const BigInt& exp, const BigInt& mod) const {
     return res;
 }
 
-void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert) {
-    auto size = a.size();
-    if (size == 1)  return;
-
-    std::vector<std::complex<long double>> a0(size / 2);
-    std::vector<std::complex<long double>> a1(size / 2);
-    for (unsigned i = 0, j = 0; i < size; i += 2, j++) {
-        a0[j] = a[i];
-        a1[j] = a[i + 1];
-    }
-
-    fft(a0, invert);
-    fft(a1, invert);
-
-    long double ang = 2 * ((long double)(M_PI)) / size * (invert ? -1 : 1);
-    std::complex<long double> w(1.0);
-    std::complex<long double> wn(cosl(ang), sinl(ang));
-    for (unsigned int i = 0; i < size / 2; ++i) {
-        a[i] = a0[i] + w * a1[i];
-        a[i + size / 2] = a0[i] - w * a1[i];
-        if (invert)
-            a[i] /= 2, a[i + size / 2] /= 2;
-        w *= wn;
-    }
-}
-
 void BigInt::split_at(const BigInt& num, size_t m, BigInt& high, BigInt& low) {
     if (m >= num.digits.size()) {
         high = BigInt(0);
@@ -438,4 +412,79 @@ BigInt BigInt::karatsuba_multiply(const BigInt& other) const {
     }
 
     return result;
+}
+
+void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert)
+{
+    auto size = a.size();
+    if (size == 1)  return;
+
+    std::vector<std::complex<long double>> a0(size / 2);
+    std::vector<std::complex<long double>> a1(size / 2);
+    for (unsigned i = 0, j = 0; i < size; i += 2, j++)
+    {
+        a0[j] = a[i];
+        a1[j] = a[i + 1];
+    }
+
+    fft(a0, invert);
+    fft(a1, invert);
+
+    long double ang = 2 * ((long double)(M_PI)) / size * (invert ? -1 : 1);
+    std::complex<long double> w(1.0);
+    std::complex<long double> wn(cosl(ang), sinl(ang));
+    for (unsigned int i = 0; i < size / 2; ++i) {
+        a[i] = a0[i] + w * a1[i];
+        a[i + size / 2] = a0[i] - w * a1[i];
+        if (invert)
+            a[i] /= 2, a[i + size / 2] /= 2;
+        w *= wn;
+    }
+}
+
+
+
+BigInt BigInt::multFurie(const BigInt& second)
+{
+    BigInt res;
+
+    res.isNegative = isNegative ^ second.isNegative;
+
+    std::vector<std::complex<long double>> fa(digits.begin(), digits.end());
+    std::vector<std::complex<long double>> fb(second.digits.begin(), second.digits.end());
+
+    uint size = 1;
+    while (size < std::max(digits.size(), second.digits.size())) {
+        size <<= 1;
+    }
+    size <<= 1;
+    fa.resize(size);
+    fb.resize(size);
+
+    fft(fa, false);
+    fft(fb, false);
+    for (uint i = 0; i < size; ++i)
+        fa[i] = fb[i];
+    fft(fa, true);
+
+    unsigned long long count = 0;
+    for (auto elem : fa)
+    {
+        unsigned long long tmp = (unsigned long long)(elem.real() + 0.5) + count;
+        count = 0;
+
+        if (tmp >= BASE)
+        {
+            count = (tmp / BASE);
+            tmp -= BASE * count;
+        }
+        res.digits.push_back(tmp % BASE);
+    }
+
+    res.digits.push_back(count);
+
+
+    res.remove_leading_zeros();
+
+    return res;
 }

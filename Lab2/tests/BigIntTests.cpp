@@ -242,7 +242,13 @@ TEST(KaratsubaTest, Multiplication) {
     EXPECT_EQ(karatsuba_result, normal_result);
 }
 
+TEST(FurieTest, multFurie) {
+    BigInt num1("12345678901234567890372958732698573659238723523");
+    BigInt num2("98765432109876543210302857738975623897562398756938275");
 
+    BigInt multFurie_result = num1.multFurie(num2);
+    EXPECT_EQ(multFurie_result, BigInt("98765432109876543210000000000"));
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

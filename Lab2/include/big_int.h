@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <bits/stdint-uintn.h>
 
 #define BASE 1000000000
 
@@ -52,6 +53,8 @@ public:
     [[nodiscard]] BigInt mod_exp(const BigInt& exp, const BigInt& mod) const;
 
     void fft(std::vector<std::complex<long double>>& a, bool invert);
+
+    BigInt multFurie(const BigInt &second);
 
     [[nodiscard]] BigInt fft_multiply(const BigInt& a) const;
 
