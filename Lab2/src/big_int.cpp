@@ -412,7 +412,6 @@ void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert) {
     size_t n = a.size();
     if (n <= 1) return;
 
-    // Разделение на четные и нечетные позиции
     std::vector<std::complex<long double>> a0(n/2), a1(n/2);
     for (size_t i = 0; i < n/2; ++i) {
         a0[i] = a[i*2];
@@ -422,7 +421,6 @@ void BigInt::fft(std::vector<std::complex<long double>>& a, bool invert) {
     fft(a0, invert);
     fft(a1, invert);
 
-    // Точное вычисление угла
     long double angle = 2 * M_PIl / n * (invert ? -1 : 1);
     std::complex<long double> w(1.0), wn(std::polar(1.0L, angle));
 

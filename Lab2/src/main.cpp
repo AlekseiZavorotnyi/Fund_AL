@@ -2,8 +2,7 @@
 #include "big_int.h"
 
 int main() {
-    BigInt bigint("3");
-    BigInt bigint1("18");
-    BigInt bigint2 = bigint.karatsuba_multiply(bigint1);
-    std::cout << bigint2 << std::endl;
+    BigInt num1("375693276439287592837569832756238976589237568923759327059832785973268576329875329875643287");
+    BigInt num2("99438520498572390572389768280509238750932875083298765432109876543210302857738975623897562398756938275");
+    std::cout << num1.multFurie(num2) << std::endl;
 }
